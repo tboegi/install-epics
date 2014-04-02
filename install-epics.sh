@@ -50,6 +50,7 @@ export APTGET
 #########################
 
 if ! test -d $HOME_EPICS_APPS; then
+  echo $SUDO mkdir -p $HOME_EPICS_APPS &&
   $SUDO mkdir -p $HOME_EPICS_APPS || {
     echo >&2 can not chown $HOME_EPICS_APPS
     exit 1
@@ -57,6 +58,7 @@ if ! test -d $HOME_EPICS_APPS; then
 fi
 
 if ! test -w $HOME_EPICS_APPS; then
+  echo $SUDO chown "$USER" $HOME_EPICS_APPS &&
   $SUDO chown "$USER" $HOME_EPICS_APPS || {
     echo >&2 can not chown $HOME_EPICS_APPS
     exit 1
@@ -111,6 +113,22 @@ install_re2c()
   )
 }
 
+install_streamdevice()
+{
+  cd $HOME_EPICS_APPS/modules &&
+  if ! test -d streamdevice; then
+    mkdir -p streamdevice
+  fi &&
+  cd streamdevice &&
+  if ! test -L src; then
+    ln -s ../../$SYNAPPSVER/support/stream-2-5-1/streamDevice/src/ src || exit 1
+  fi &&
+  for f in dbd lib include; do
+    if ! test -L $f; then
+      ln -s ../../$SYNAPPSVER/support/stream-2-5-1/$f/ $f || exit 1
+    fi
+  done
+}
 
 (
   cd $HOME_EPICS_APPS &&
@@ -426,6 +444,10 @@ if test -n "$SYNAPPSVER"; then
     fi
   ) || {
     echo >&2 failed $SYNAPPSVER PWD=$PWD PATH=$PATH
+    exit 1
+  }
+  install_streamdevice  || {
+    echo >&2 failed install_streamdevice PWD=$PWD
     exit 1
   }
 else
