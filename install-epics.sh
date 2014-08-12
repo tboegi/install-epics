@@ -7,6 +7,18 @@ BASH_ALIAS_EPICS=~/.epics
 if test -z "$HOME_EPICS_APPS"; then
   HOME_EPICS_APPS=$HOME/../epics/Apps
 fi
+echo HOME_EPICS_APPS=$HOME_EPICS_APPS
+HOME_EPICS_APPS=$(echo $HOME_EPICS_APPS | sed -e "s%/[^/][^/]*/\.\./%/%")
+
+echo HOME_EPICS_APPS=$HOME_EPICS_APPS
+echo Do you want to install EPICS in $HOME_EPICS_APPS ? [y/N]
+read yesno
+case $yesno in
+  y|Y)
+  ;;
+  *)
+  exit 0
+esac
 
 #Where are the binaries of EPICS
 EPICS_ROOT=/usr/local/epics
@@ -76,6 +88,9 @@ if ! test -w $HOME_EPICS_APPS; then
   }
 fi
 
+if ! test -d /usr/local; then
+  sudo mkdir /usr/local
+fi &&
 if test -L $EPICS_ROOT; then
   (
     cd /usr/local &&
