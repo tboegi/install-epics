@@ -358,6 +358,12 @@ comment_out_in_file()
   done
 }
 
+
+# We need wget
+if ! type wget >/dev/null 2>/dev/null; then
+  echo $APTGET wget
+  $APTGET wget
+fi &&
 (
   cd $HOME_EPICS_APPS &&
   if ! test -f baseR${EPICS_BASE_VER}.tar.gz; then
