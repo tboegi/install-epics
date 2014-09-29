@@ -441,6 +441,11 @@ EOF
 ################
 
 (
+  # We need gcc and g++: gcc-g++ under Scientifc Linux
+  if ! type g++ >/dev/null 2>/dev/null; then
+    echo $APTGET gcc-c++
+    $APTGET gcc-c++
+  fi
   # We need g++
   if ! type g++ >/dev/null 2>/dev/null; then
     echo $APTGET g++
