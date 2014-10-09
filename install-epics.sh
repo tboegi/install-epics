@@ -122,6 +122,31 @@ else
 fi
 
 
+wget_or_curl()
+{
+  url=$1
+  file=$2
+  if type curl >/dev/null 2>/dev/null; then
+    curl "$url" >"$file.$$.tmp" &&
+    mv "$file.$$.tmp" "$file" || {
+      echo >&2 curl can not get $url
+      exit 1
+    }
+  else
+    # We need wget
+    if ! type wget >/dev/null 2>/dev/null; then
+      echo $APTGET wget
+      $APTGET wget
+    fi &&
+    wget "$url" -O "$file.$$.tmp" &&
+    mv "$file.$$.tmp" "$file" || {
+      echo >&2 wget can not get $url
+      exit 1
+    }
+  fi
+}
+
+
 install_re2c()
 {
   cd $HOME_EPICS_APPS &&
@@ -359,19 +384,10 @@ comment_out_in_file()
 }
 
 
-# We need wget
-if ! type wget >/dev/null 2>/dev/null; then
-  echo $APTGET wget
-  $APTGET wget
-fi &&
 (
   cd $HOME_EPICS_APPS &&
   if ! test -f baseR${EPICS_BASE_VER}.tar.gz; then
-    wget http://www.aps.anl.gov/epics/download/base/baseR${EPICS_BASE_VER}.tar.gz -O baseR${EPICS_BASE_VER}.tar.gz.$$.tmp &&
-    mv baseR${EPICS_BASE_VER}.tar.gz.$$.tmp baseR${EPICS_BASE_VER}.tar.gz || {
-      echo >&2 can not wget baseR${EPICS_BASE_VER}.tar.gz
-      exit 1
-    }
+    wget_or_curl http://www.aps.anl.gov/epics/download/base/baseR${EPICS_BASE_VER}.tar.gz baseR${EPICS_BASE_VER}.tar.gz
   fi
   if ! test -d base-$EPICS_BASE_VER; then
     tar xzf baseR${EPICS_BASE_VER}.tar.gz || {
@@ -479,11 +495,7 @@ if test -n "$STREAMDEVICEVER"; then
   (
     cd $HOME_EPICS_APPS &&
     if ! test -f $STREAMDEVICEVER.tgz; then
-      wget http://epics.web.psi.ch/software/streamdevice/$STREAMDEVICEVER.tgz -O $STREAMDEVICEVER.tgz.$$.tmp &&
-      mv $STREAMDEVICEVER.tgz.$$.tmp $STREAMDEVICEVER.tgz || {
-        echo >&2 can not wget $STREAMDEVICEVER.tgz
-        exit 1
-      }
+      wget_or_curl http://epics.web.psi.ch/software/streamdevice/$STREAMDEVICEVER.tgz $STREAMDEVICEVER.tgz.$$
     fi
     if ! test -d $STREAMDEVICEVER; then
       tar xzvf $STREAMDEVICEVER.tgz
@@ -580,11 +592,7 @@ if test -n "$ASYNVER"; then
     (
       cd $HOME_EPICS_APPS &&
       if ! test -f $ASYNVER.tar.gz; then
-        wget http://www.aps.anl.gov/epics/download/modules/$ASYNVER.tar.gz -O $ASYNVER.tar.gz.$$.tmp &&
-        mv $ASYNVER.tar.gz.$$.tmp $ASYNVER.tar.gz || {
-          echo >&2 can not wget $ASYNVER.tar.gz
-          exit 1
-        }
+        wget_or_curl http://www.aps.anl.gov/epics/download/modules/$ASYNVER.tar.gz $ASYNVER.tar.gz
       fi
       if ! test -d $ASYNVER; then
         tar xzvf $ASYNVER.tar.gz
@@ -628,11 +636,7 @@ if test -n "$SYNAPPSVER"; then
   (
     cd $HOME_EPICS_APPS &&
     if ! test -f $SYNAPPSVER.tar.gz; then
-      wget http://www.aps.anl.gov/bcda/synApps/tar/$SYNAPPSVER.tar.gz -O $SYNAPPSVER.tar.gz.$$.tmp &&
-      mv $SYNAPPSVER.tar.gz.$$.tmp $SYNAPPSVER.tar.gz || {
-        echo >&2 can not wget $SYNAPPSVER.tar.gz
-        exit 1
-      }
+      wget_or_curl http://www.aps.anl.gov/bcda/synApps/tar/$SYNAPPSVER.tar.gz $SYNAPPSVER.tar.gz
     fi &&
     if ! test -d $SYNAPPSVER; then
       tar xzvf $SYNAPPSVER.tar.gz
@@ -766,11 +770,7 @@ if test -n "$SYNAPPSVER"; then
       cd $HOME_EPICS_APPS &&
       if ! test -f $EPICS_EXTENSIONS_TOP_VER.tar.gz; then
         echo installing $EPICS_EXTENSIONS_TOP_VER &&
-        wget http://www.aps.anl.gov/epics/download/extensions/$EPICS_EXTENSIONS_TOP_VER.tar.gz -O $EPICS_EXTENSIONS_TOP_VER.tar.gz.$$.tmp &&
-        mv $EPICS_EXTENSIONS_TOP_VER.tar.gz.$$.tmp $EPICS_EXTENSIONS_TOP_VER.tar.gz || {
-          echo >&2 can not wget $EPICS_EXTENSIONS_TOP_VER.tar.gz
-          exit 1
-        }
+        wget_or_curl http://www.aps.anl.gov/epics/download/extensions/$EPICS_EXTENSIONS_TOP_VER.tar.gz  $EPICS_EXTENSIONS_TOP_VER.tar.gz
       fi
       if ! test -d ${EPICS_EXTENSIONS_TOP_VER}; then
         tar xzf $EPICS_EXTENSIONS_TOP_VER.tar.gz
@@ -786,11 +786,7 @@ if test -n "$SYNAPPSVER"; then
       cd $HOME_EPICS_APPS &&
       if ! test -f $EPICS_MSI_VER.tar.gz; then
         echo installing $EPICS_MSI_VER &&
-        wget http://www.aps.anl.gov/epics/download/extensions/$EPICS_MSI_VER.tar.gz -O $EPICS_MSI_VER.tar.gz.$$.tmp &&
-        mv $EPICS_MSI_VER.tar.gz.$$.tmp $EPICS_MSI_VER.tar.gz || {
-          echo >&2 can not wget $EPICS_MSI_VER.tar.gz
-          exit 1
-        }
+        wget_or_curl http://www.aps.anl.gov/epics/download/extensions/$EPICS_MSI_VER.tar.gz $EPICS_MSI_VER.tar.gz
       fi &&
       (
         mkdir -p extensions/src &&
