@@ -195,7 +195,14 @@ patch_motor_h()
       echo PWD=$PWD patch motor.h not needed &&
       return
     fi &&
-      cat <<EOF >motor.diff
+    echo PWD=$PWD patch motor.h &&
+    if ! test -e motor.h.original; then
+      cp motor.h motor.h.original
+    fi &&
+    cp motor.h.original motor.h &&
+    case $PWD in
+      *motor-6-7*)
+      cat <<EOF >motor.patch
 diff --git a/motorApp/MotorSrc/motor.h b/motorApp/MotorSrc/motor.h
 --- a/motorApp/MotorSrc/motor.h
 +++ b/motorApp/MotorSrc/motor.h
@@ -213,12 +220,32 @@ diff --git a/motorApp/MotorSrc/motor.h b/motorApp/MotorSrc/motor.h
 >         #define MSB_First (TRUE)
 >     #endif
 EOF
-      echo PWD=$PWD patch motor.h &&
-      if ! test -e motor.h.original; then
-        cp motor.h motor.h.original
-      fi &&
-      cp motor.h.original motor.h &&
-      patch <motor.diff
+      ;;
+      *motor-6-8*)
+      cat <<EOF >motor.patch
+diff --git a/motorApp/MotorSrc/motor.h b/motorApp/MotorSrc/motor.h
+--- a/motorApp/MotorSrc/motor.h
++++ b/motorApp/MotorSrc/motor.h
+63a64
+> #include <epicsEndian.h>
+140c141
+< #elif (CPU == PPC604) || (CPU == PPC603) || (CPU == PPC85XX) || (CPU == MC68040) || (CPU == PPC32)
+---
+> #elif defined(CPU) && ((CPU == PPC604) || (CPU == PPC603) || (CPU == PPC85XX) || (CPU == MC68040) || (CPU == PPC32))
+141a143,148
+> #elif defined(__GNUC__)
+>     #if (EPICS_BYTE_ORDER == EPICS_ENDIAN_LITTLE)
+>         #define LSB_First (TRUE)
+>     #else
+>         #define MSB_First (TRUE)
+>     #endif
+EOF
+      ;;
+      *)
+      echo >&2 "Can not patch motor.h, only motor 6.7 or 6.8 is supported"
+      exit 1
+    esac &&
+    patch <motor.patch
   )
 }
 
