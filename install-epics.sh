@@ -78,11 +78,11 @@ create_soft_x_y() {
   dst=$3
   (
     cd "$dir" &&
-    linkdst=$(readlink $dst) &&
+    linkdst=$(readlink $dst) || linkdst=""
     if test "$linkdst" != "$src"; then
       echo "$linkdst" != "$dst" &&
       echo $SUDO rm $dst &&
-      $SUDO rm  $dst &&
+      $SUDO rm -f $dst &&
       echo $SUDO ln -s $src $dst &&
       $SUDO ln -s $src $dst || {
         echo >&2 can not link $src $dst
