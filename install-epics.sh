@@ -168,23 +168,6 @@ run_make_in_dir()
   )
 }
 
-install_asyn_ver()
-{
-  asyndir="$1"/
-  #create_soft_x_y $HOME_EPICS_APPS/modules $asyndir/ asyn
-
-  #asyndir="$1"/
-  #cd $HOME_EPICS_APPS/modules &&
-  #if test -L asyn; then
-  #  echo rm asyn &&
-  #  rm asyn
-  #fi &&
-  #ln -sv $asyndir asyn || {
-  #  echo >&2 Can not ln -sv $asyndir asyn
-  #  exit 1
-  #}
-}
-
 patch_motor_h()
 {
   (
@@ -613,7 +596,6 @@ fi
 
 if test -n "$ASYNVER"; then
 (
-  #install_asyn_ver ../$ASYNVER &&
   create_soft_x_y $HOME_EPICS_APPS/modules ../$ASYNVER/ asyn
     (
       cd $HOME_EPICS_APPS &&
