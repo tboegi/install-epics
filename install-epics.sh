@@ -433,8 +433,12 @@ comment_out_in_file()
 ) || exit 1
 
 EPICS_HOST_ARCH=$($EPICS_ROOT/base/startup/EpicsHostArch) || {
-  echo >&2 EPICS_HOST_ARCH failed
-  exit 1
+  GETEPICSHOSTARCH=$HOME_EPICS_APPS/base-${EPICS_BASE_VER}/startup/EpicsHostArch
+  echo GETEPICSHOSTARCH=$GETEPICSHOSTARCH
+  EPICS_HOST_ARCH=$($GETEPICSHOSTARCH) || {
+    echo >&2 EPICS_HOST_ARCH failed
+    exit 1
+  }
 }
 # here we know the EPICS_HOST_ARCH
 export EPICS_HOST_ARCH
