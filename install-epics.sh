@@ -79,7 +79,7 @@ create_soft_x_y() {
   (
     cd "$dir" &&
     linkdst=$(readlink $dst) &&
-    if test "$linkdst" != "$dst"; then
+    if test "$linkdst" != "$src"; then
       echo "$linkdst" != "$dst" &&
       echo $SUDO rm $dst &&
       $SUDO rm  $dst &&
