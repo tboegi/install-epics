@@ -272,14 +272,14 @@ install_motor()
     done
   ) &&
   (
-    motorlib=$(find ../../$SYNAPPSVER/support/motor-*/ -name lib);
+    motorlib=$(find ../../$SYNAPPSVER/support/motor-*/ -name lib | sed -e "s!//!/!g");
     echo motorlib=$motorlib
-    ln -s "$motorlib"/ lib
+    ln -s "$motorlib" lib
   ) &&
   (
-    motorinclude=$(find ../../$SYNAPPSVER/support/motor-*/ -name include);
+    motorinclude=$(find ../../$SYNAPPSVER/support/motor-*/ -name include | sed -e "s!//!/!g");
     echo motorinclude=$motorinclude
-    ln -s "$motorinclude"/ include
+    ln -s "$motorinclude" include
   )
 }
 
