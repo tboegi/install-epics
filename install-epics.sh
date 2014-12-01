@@ -72,6 +72,28 @@ fi
 export APTGET
 #########################
 
+create_soft_x_y() {
+  dir=$1
+  src=$2
+  dst=$3
+  (
+    cd "$dir" &&
+    linkdst=$(readlink $dst) || linkdst=""
+    if test "$linkdst" != "$src"; then
+      echo "$linkdst" != "$dst" &&
+      echo $SUDO rm $dst &&
+      $SUDO rm -f $dst &&
+      echo $SUDO ln -s $src $dst &&
+      $SUDO ln -s $src $dst || {
+        echo >&2 can not link $src $dst
+        exit 1
+      }
+    fi
+  )
+}
+
+
+########################
 if ! test -d $HOME_EPICS_APPS; then
   echo $SUDO mkdir -p $HOME_EPICS_APPS &&
   $SUDO mkdir -p $HOME_EPICS_APPS || {
@@ -91,35 +113,8 @@ fi
 if ! test -d /usr/local; then
   sudo mkdir /usr/local
 fi &&
-if test -L $EPICS_ROOT; then
-  (
-    cd /usr/local &&
-    epicsbaselink=$(readlink epics) &&
-    #echo epicsbaselink=$epicsbaselink
-    if test "$epicsbaselink" != "$HOME_EPICS_APPS"; then
-      echo "$epicsbaselink" != "$HOME_EPICS_APPS" &&
-      echo $SUDO rm $HOME_EPICS_APPS &&
-      $SUDO rm $PWD/epics &&
-      echo $SUDO ln -s $HOME_EPICS_APPS epics &&
-      $SUDO ln -s $HOME_EPICS_APPS epics || {
-        echo >&2 can not unlink $HOME_EPICS_APPS
-        exit 1
-      }
-    fi
-  )
-else
-  if test -e $EPICS_ROOT; then
-    echo >&2 $EPICS_ROOT not a softlink
-    echo >&2 $EPICS_ROOT please remove it
-    exit 1
-  fi
-  cd /usr/local &&
-  echo $SUDO ln -s $HOME_EPICS_APPS epics &&
-  $SUDO ln -s $HOME_EPICS_APPS epics || {
-    echo >&2 can not unlink $HOME_EPICS_APPS
-    exit 1
-  }
-fi
+create_soft_x_y /usr/local $HOME_EPICS_APPS epics &&
+create_soft_x_y $HOME_EPICS_APPS base-${EPICS_BASE_VER} base &&
 
 
 wget_or_curl()
@@ -171,20 +166,6 @@ run_make_in_dir()
     cd $dir &&
     make
   )
-}
-
-install_asyn_ver()
-{
-  asyndir="$1"/
-  cd $HOME_EPICS_APPS/modules &&
-  if test -L asyn; then
-    echo rm asyn &&
-    rm asyn
-  fi &&
-  ln -sv $asyndir asyn || {
-    echo >&2 Can not ln -sv $asyndir asyn
-    exit 1
-  }
 }
 
 patch_motor_h()
@@ -291,14 +272,14 @@ install_motor()
     done
   ) &&
   (
-    motorlib=$(find ../../$SYNAPPSVER/support/motor-*/ -name lib);
+    motorlib=$(find ../../$SYNAPPSVER/support/motor-*/ -name lib | sed -e "s!//!/!g");
     echo motorlib=$motorlib
-    ln -s "$motorlib"/ lib
+    ln -s "$motorlib" lib
   ) &&
   (
-    motorinclude=$(find ../../$SYNAPPSVER/support/motor-*/ -name include);
+    motorinclude=$(find ../../$SYNAPPSVER/support/motor-*/ -name include | sed -e "s!//!/!g");
     echo motorinclude=$motorinclude
-    ln -s "$motorinclude"/ include
+    ln -s "$motorinclude" include
   )
 }
 
@@ -422,23 +403,14 @@ comment_out_in_file()
       rm -rf base-$EPICS_BASE_VER
       exit 1
     }
-  fi &&
-  if ! test -L base; then
-    echo ln -s ./base-${EPICS_BASE_VER} ./base &&
-    ln -s ./base-${EPICS_BASE_VER} ./base || {
-      echo >&2 can not tar xzf baseR${EPICS_BASE_VER}.tar.gz
-      exit 1
-    }
   fi
 ) || exit 1
 
+#Need to set the softlink now
+
 EPICS_HOST_ARCH=$($EPICS_ROOT/base/startup/EpicsHostArch) || {
-  GETEPICSHOSTARCH=$HOME_EPICS_APPS/base-${EPICS_BASE_VER}/startup/EpicsHostArch
-  echo GETEPICSHOSTARCH=$GETEPICSHOSTARCH
-  EPICS_HOST_ARCH=$($GETEPICSHOSTARCH) || {
-    echo >&2 EPICS_HOST_ARCH failed
-    exit 1
-  }
+  echo >&2 EPICS_HOST_ARCH failed
+  exit 1
 }
 # here we know the EPICS_HOST_ARCH
 export EPICS_HOST_ARCH
@@ -624,7 +596,7 @@ fi
 
 if test -n "$ASYNVER"; then
 (
-  install_asyn_ver ../$ASYNVER &&
+  create_soft_x_y $HOME_EPICS_APPS/modules ../$ASYNVER/ asyn
     (
       cd $HOME_EPICS_APPS &&
       if ! test -f $ASYNVER.tar.gz; then
