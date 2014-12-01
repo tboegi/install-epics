@@ -26,7 +26,11 @@ EPICS_BASE=$EPICS_ROOT/base
 EPICS_MODULES=$EPICS_ROOT/modules
 
 #Version of base
-EPICS_BASE_VER=3.14.12.3
+#EPICS_BASE_VER=R3.14.12.3
+#EPICS_BASE_DIR=base-3.14.12.3
+EPICS_BASE_VER=-3.15.1-rc1
+EPICS_BASE_DIR=base${EPICS_BASE_VER}
+
 
 #Version for synApps
 SYNAPPSVER=synApps_5_6
@@ -114,7 +118,7 @@ if ! test -d /usr/local; then
   sudo mkdir /usr/local
 fi &&
 create_soft_x_y /usr/local $HOME_EPICS_APPS epics &&
-create_soft_x_y $HOME_EPICS_APPS base-${EPICS_BASE_VER} base &&
+create_soft_x_y $HOME_EPICS_APPS $EPICS_BASE_DIR base &&
 
 
 wget_or_curl()
@@ -394,13 +398,13 @@ comment_out_in_file()
 
 (
   cd $HOME_EPICS_APPS &&
-  if ! test -f baseR${EPICS_BASE_VER}.tar.gz; then
-    wget_or_curl http://www.aps.anl.gov/epics/download/base/baseR${EPICS_BASE_VER}.tar.gz baseR${EPICS_BASE_VER}.tar.gz
+  if ! test -f base${EPICS_BASE_VER}.tar.gz; then
+    wget_or_curl http://www.aps.anl.gov/epics/download/base/base${EPICS_BASE_VER}.tar.gz base${EPICS_BASE_VER}.tar.gz
   fi
-  if ! test -d base-$EPICS_BASE_VER; then
-    tar xzf baseR${EPICS_BASE_VER}.tar.gz || {
-      echo >&2 can not tar xzf baseR${EPICS_BASE_VER}.tar.gz
-      rm -rf base-$EPICS_BASE_VER
+  if ! test -d base$EPICS_BASE_VER; then
+    tar xzf base${EPICS_BASE_VER}.tar.gz || {
+      echo >&2 can not tar xzf base${EPICS_BASE_VER}.tar.gz
+      rm -rf base$EPICS_BASE_VER
       exit 1
     }
   fi
