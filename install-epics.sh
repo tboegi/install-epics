@@ -1,12 +1,27 @@
 #!/bin/sh
 
+#Version of base
+EPICS_BASE_VER=3.14.12.3
+
+#Version for synApps
+SYNAPPSVER=synApps_5_7
+
+#Version for ASYN
+ASYNVER=asyn4-22
+
 BASHRC=~/.bashrc
 BASH_ALIAS_EPICS=~/.epics
 
 #Where is the source code of EPICS
 if test -z "$HOME_EPICS_APPS"; then
-  HOME_EPICS_APPS=$HOME/../epics/Apps
+	if test ${EPICS_BASE_VER}_${ASYNVER}_${SYNAPPSVER} = 3.14.12.3_asyn4-22_synApps_5_6;
+	then
+		HOME_EPICS_APPS=$HOME/../epics/Apps
+	else
+		HOME_EPICS_APPS=$HOME/../epics/base${EPICS_BASE_VER}_${ASYNVER}_${SYNAPPSVER}
+	fi
 fi
+
 echo HOME_EPICS_APPS=$HOME_EPICS_APPS
 HOME_EPICS_APPS=$(echo $HOME_EPICS_APPS | sed -e "s%/[^/][^/]*/\.\./%/%")
 
@@ -24,15 +39,6 @@ esac
 EPICS_ROOT=/usr/local/epics
 EPICS_BASE=$EPICS_ROOT/base
 EPICS_MODULES=$EPICS_ROOT/modules
-
-#Version of base
-EPICS_BASE_VER=3.14.12.3
-
-#Version for synApps
-SYNAPPSVER=synApps_5_6
-
-#Version for ASYN
-ASYNVER=asyn4-22
 
 if test $SYNAPPSVER=synApps_5_6; then
   MODSTOBEREMOVED="ALLEN_BRADLEY DAC128V IP330 IPUNIDIG LOVE IP VAC SOFTGLUE QUADEM DELAYGEN CAMAC VME AREA_DETECTOR DXP"
