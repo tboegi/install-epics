@@ -3,10 +3,24 @@
 BASHRC=~/.bashrc
 BASH_ALIAS_EPICS=~/.epics
 
+#Version of base
+EPICS_BASE_VER=3.14.12.3
+
+#Version for synApps
+SYNAPPSVER=5_6
+
+#Version for ASYN
+ASYNVER=4-22
+
+#msi
+EPICS_MSI_VER=msi1-5
+
+
+ASYN_VER_X_Y=asyn$ASYNVER
+SYNAPPS_VER_X_Y=synApps_$SYNAPPSVER
+
 #Where is the source code of EPICS
-if test -z "$HOME_EPICS_APPS"; then
-  HOME_EPICS_APPS=$HOME/../epics/Apps
-fi
+HOME_EPICS_APPS=$HOME/../epics/BASE_${EPICS_BASE_VER}_ASYN_${ASYNVER}_SYNAPPS_${SYNAPPSVER}
 echo HOME_EPICS_APPS=$HOME_EPICS_APPS
 HOME_EPICS_APPS=$(echo $HOME_EPICS_APPS | sed -e "s%/[^/][^/]*/\.\./%/%")
 
@@ -25,16 +39,8 @@ EPICS_ROOT=/usr/local/epics
 EPICS_BASE=$EPICS_ROOT/base
 EPICS_MODULES=$EPICS_ROOT/modules
 
-#Version of base
-EPICS_BASE_VER=3.14.12.3
 
-#Version for synApps
-SYNAPPSVER=synApps_5_6
-
-#Version for ASYN
-ASYNVER=asyn4-22
-
-if test $SYNAPPSVER=synApps_5_6; then
+if test $SYNAPPS_VER_X_Y=synApps_5_6; then
   MODSTOBEREMOVED="ALLEN_BRADLEY DAC128V IP330 IPUNIDIG LOVE IP VAC SOFTGLUE QUADEM DELAYGEN CAMAC VME AREA_DETECTOR DXP"
 else
   MODSTOBEREMOVED="ALLEN_BRADLEY AREA_DETECTOR AUTOSAVE CAMAC DAC128V DXP DELAYGEN IP IP330 IPUNIDIG LOVE MCA MEASCOMP OPTICS QUADEM SOFTGLUE STD SNCSEQ VAC VME"
@@ -43,8 +49,6 @@ fi
 #extensions top
 EPICS_EXTENSIONS_TOP_VER=extensionsTop_20120904
 
-#msi
-EPICS_MSI_VER=msi1-5
 
 #StreamDevice, later version than synApps
 #STREAMDEVICEVER=StreamDevice-2-6
@@ -239,7 +243,7 @@ install_motor()
   fi &&
   mkdir -p motor &&
   cd motor &&
-  motordevver=$(echo ../../$SYNAPPSVER/support/motor-*) &&
+  motordevver=$(echo ../../$SYNAPPS_VER_X_Y/support/motor-*) &&
   echo motordevver=$motordevver &&
   for f in src dbd Db lib include; do
     if test -e $f; then
@@ -251,7 +255,7 @@ install_motor()
     mkdir dbd &&
     cd dbd &&
     rm -rf * &&
-    for mdbd in $(find ../../../$SYNAPPSVER/support/motor-* -name '*.dbd'); do
+    for mdbd in $(find ../../../$SYNAPPS_VER_X_Y/support/motor-* -name '*.dbd'); do
       dbdbasename="${mdbd##*/}" &&
       #echo mdbd=$mdbd dbdbasename=$dbdbasename &&
       if ! test -f $dbdbasename; then
@@ -263,7 +267,7 @@ install_motor()
     mkdir Db &&
     cd Db &&
     rm -rf * &&
-    for mdbd in $(find ../../../$SYNAPPSVER/support/motor-* -name '*.db'); do
+    for mdbd in $(find ../../../$SYNAPPS_VER_X_Y/support/motor-* -name '*.db'); do
       dbdbasename="${mdbd##*/}" &&
       #echo mdbd=$mdbd dbdbasename=$dbdbasename &&
       if ! test -f $dbdbasename; then
@@ -272,12 +276,12 @@ install_motor()
     done
   ) &&
   (
-    motorlib=$(find ../../$SYNAPPSVER/support/motor-*/ -name lib | sed -e "s!//!/!g");
+    motorlib=$(find ../../$SYNAPPS_VER_X_Y/support/motor-*/ -name lib | sed -e "s!//!/!g");
     echo motorlib=$motorlib
     ln -s "$motorlib" lib
   ) &&
   (
-    motorinclude=$(find ../../$SYNAPPSVER/support/motor-*/ -name include | sed -e "s!//!/!g");
+    motorinclude=$(find ../../$SYNAPPS_VER_X_Y/support/motor-*/ -name include | sed -e "s!//!/!g");
     echo motorinclude=$motorinclude
     ln -s "$motorinclude" include
   )
@@ -290,20 +294,20 @@ install_streamdevice()
     mkdir -p streamdevice
   fi &&
   cd streamdevice &&
-  streamdevver=$(echo ../../$SYNAPPSVER/support/stream-*) &&
+  streamdevver=$(echo ../../$SYNAPPS_VER_X_Y/support/stream-*) &&
   echo streamdevver=$streamdevver &&
   if test -L src; then
     echo rm src &&
     rm src
   fi &&
-  echo ln -s ../../$SYNAPPSVER/support/$streamdevver/streamDevice/src/ src &&
-  ln -s ../../$SYNAPPSVER/support/$streamdevver/streamDevice/src/ src || exit 1
+  echo ln -s ../../$SYNAPPS_VER_X_Y/support/$streamdevver/streamDevice/src/ src &&
+  ln -s ../../$SYNAPPS_VER_X_Y/support/$streamdevver/streamDevice/src/ src || exit 1
   for f in dbd lib include; do
     if test -L $f; then
       echo rm $f &&
       rm $f
     fi &&
-    ln -s ../../$SYNAPPSVER/support/$streamdevver/$f/ $f || exit 1
+    ln -s ../../$SYNAPPS_VER_X_Y/support/$streamdevver/$f/ $f || exit 1
   done
 }
 
@@ -321,13 +325,13 @@ fix_epics_base()
       }
     fi &&
     sed <"$filebasename.original" >"$file.$$.tmp" \
-      -e "s!^SUPPORT=.*!SUPPORT=$EPICS_ROOT/$SYNAPPSVER/support!" \
+      -e "s!^SUPPORT=.*!SUPPORT=$EPICS_ROOT/$SYNAPPS_VER_X_Y/support!" \
       -e "s!^EPICS_BASE=.*!EPICS_BASE=$EPICS_ROOT/base!" \
       -e "s!^\(IPAC=.*\)!## rem by install-epics \1!" \
       -e "s!^\(SNCSEQ=.*\)!## rem by install-epics \1!" \
       -e "s!^BUSY=.*!BUSY=\$(SUPPORT)/busy-1-4!" &&
       mv -fv "$file.$$.tmp" "$file" &&
-      if test "$ASYNVER"; then
+      if test "$ASYN_VER_X_Y"; then
         sed <"$file" >"$file.$$.tmp" \
           -e "s!^ASYN=.*!ASYN=$EPICS_MODULES/asyn!" &&
         mv -fv "$file.$$.tmp" "$file"
@@ -594,22 +598,22 @@ EOF
 fi
 
 
-if test -n "$ASYNVER"; then
+if test -n "$ASYN_VER_X_Y"; then
 (
-  create_soft_x_y $HOME_EPICS_APPS/modules ../$ASYNVER/ asyn
+  create_soft_x_y $HOME_EPICS_APPS/modules ../$ASYN_VER_X_Y/ asyn
     (
       cd $HOME_EPICS_APPS &&
-      if ! test -f $ASYNVER.tar.gz; then
-        wget_or_curl http://www.aps.anl.gov/epics/download/modules/$ASYNVER.tar.gz $ASYNVER.tar.gz
+      if ! test -f $ASYN_VER_X_Y.tar.gz; then
+        wget_or_curl http://www.aps.anl.gov/epics/download/modules/$ASYN_VER_X_Y.tar.gz $ASYN_VER_X_Y.tar.gz
       fi
-      if ! test -d $ASYNVER; then
-        tar xzvf $ASYNVER.tar.gz
+      if ! test -d $ASYN_VER_X_Y; then
+        tar xzvf $ASYN_VER_X_Y.tar.gz
       fi
     ) &&
     (
       # Need to fix epics base for synapss already here,
       # (if the dir already exists)
-      path=$HOME_EPICS_APPS/$SYNAPPSVER/support/configure &&
+      path=$HOME_EPICS_APPS/$SYNAPPS_VER_X_Y/support/configure &&
       if test -d $path; then
         echo cd $path &&
         cd $path &&
@@ -620,7 +624,7 @@ if test -n "$ASYNVER"; then
       fi
     ) &&
     (
-      cd $HOME_EPICS_APPS/$ASYNVER/configure && {
+      cd $HOME_EPICS_APPS/$ASYN_VER_X_Y/configure && {
         for f in $(find . -name "RELEASE*" ); do
           echo f=$f
           fix_epics_base $f
@@ -628,34 +632,34 @@ if test -n "$ASYNVER"; then
       }
     ) &&
     (
-      run_make_in_dir $HOME_EPICS_APPS/$ASYNVER
+      run_make_in_dir $HOME_EPICS_APPS/$ASYN_VER_X_Y
     ) || {
-      echo >&2 failed $ASYNVER
+      echo >&2 failed $ASYN_VER_X_Y
       exit 1
     }
 )
 else
-  echo ASYNVER not defined, skipping asyn
-  install_asyn_ver ../$SYNAPPSVER/support/asyn-4-18
+  echo ASYN_VER_X_Y not defined, skipping asyn
+  install_asyn_ver ../$SYNAPPS_VER_X_Y/support/asyn-4-18
 fi
 
 #synApps
-if test -n "$SYNAPPSVER"; then
+if test -n "$SYNAPPS_VER_X_Y"; then
   (
     cd $HOME_EPICS_APPS &&
-    if ! test -f $SYNAPPSVER.tar.gz; then
-      wget_or_curl http://www.aps.anl.gov/bcda/synApps/tar/$SYNAPPSVER.tar.gz $SYNAPPSVER.tar.gz
+    if ! test -f $SYNAPPS_VER_X_Y.tar.gz; then
+      wget_or_curl http://www.aps.anl.gov/bcda/synApps/tar/$SYNAPPS_VER_X_Y.tar.gz $SYNAPPS_VER_X_Y.tar.gz
     fi &&
-    if ! test -d $SYNAPPSVER; then
-      tar xzvf $SYNAPPSVER.tar.gz
+    if ! test -d $SYNAPPS_VER_X_Y; then
+      tar xzvf $SYNAPPS_VER_X_Y.tar.gz
     fi
   ) || {
-    echo >&2 failed tar xzvf $SYNAPPSVER.tar.gz in $PWD
+    echo >&2 failed tar xzvf $SYNAPPS_VER_X_Y.tar.gz in $PWD
     exit 1
   } &&
   (
     if test -n "$STREAMDEVICEVER"; then
-      cd $HOME_EPICS_APPS/$SYNAPPSVER/support/stream* &&
+      cd $HOME_EPICS_APPS/$SYNAPPS_VER_X_Y/support/stream* &&
       (
         #Move the directory out of its way
         if ! test -d streamdevice.original; then
@@ -674,7 +678,7 @@ if test -n "$SYNAPPSVER"; then
     fi
   ) &&
   (
-    path=$HOME_EPICS_APPS/$SYNAPPSVER/support &&
+    path=$HOME_EPICS_APPS/$SYNAPPS_VER_X_Y/support &&
     echo cd $path &&
     cd $path &&
     for f in $(find . -name RELEASE); do
@@ -696,11 +700,11 @@ if test -n "$SYNAPPSVER"; then
       done
     ) &&
     (
-      echo cd $HOME_EPICS_APPS/$SYNAPPSVER/support/configure &&
-      cd $HOME_EPICS_APPS/$SYNAPPSVER/support/configure &&
-      if test "$SYNAPPSVER" = synApps_5_6; then
+      echo cd $HOME_EPICS_APPS/$SYNAPPS_VER_X_Y/support/configure &&
+      cd $HOME_EPICS_APPS/$SYNAPPS_VER_X_Y/support/configure &&
+      if test "$SYNAPPS_VER_X_Y" = synApps_5_6; then
       (
-        path=$HOME_EPICS_APPS/$SYNAPPSVER/support
+        path=$HOME_EPICS_APPS/$SYNAPPS_VER_X_Y/support
         echo cd $path &&
         cd $path &&
         if ! test -f makereleaseok; then
@@ -716,8 +720,8 @@ if test -n "$SYNAPPSVER"; then
       fix_epics_base $PWD/RELEASE &&
       remove_modules_from_RELEASE RELEASE &&
       (
-        echo cd $HOME_EPICS_APPS/$SYNAPPSVER/support &&
-        cd $HOME_EPICS_APPS/$SYNAPPSVER/support &&
+        echo cd $HOME_EPICS_APPS/$SYNAPPS_VER_X_Y/support &&
+        cd $HOME_EPICS_APPS/$SYNAPPS_VER_X_Y/support &&
         file=Makefile &&
         if ! test -f $file.original; then
           cp -v $file $file.original || exit 1
@@ -728,7 +732,7 @@ if test -n "$SYNAPPSVER"; then
       file=Makefile &&
       (
         # Remove AREA_DETECTOR and IP from RELEASE
-        cd $HOME_EPICS_APPS/$SYNAPPSVER/support/xxx-5*/configure &&
+        cd $HOME_EPICS_APPS/$SYNAPPS_VER_X_Y/support/xxx-5*/configure &&
         if ! test -f RELEASE.original; then
           cp -v RELEASE RELEASE.original || exit 1
         fi &&
@@ -740,7 +744,7 @@ if test -n "$SYNAPPSVER"; then
       ) &&
       (
         # Remove AREA_DETECTOR and IP from dbd
-        cd $HOME_EPICS_APPS/$SYNAPPSVER/support/xxx-5*/xxxApp/src &&
+        cd $HOME_EPICS_APPS/$SYNAPPS_VER_X_Y/support/xxx-5*/xxxApp/src &&
         if ! test -f xxxCommonInclude.dbd.original; then
           cp -v xxxCommonInclude.dbd xxxCommonInclude.dbd.original || exit 1
         fi &&
@@ -750,7 +754,7 @@ if test -n "$SYNAPPSVER"; then
       ) &&
       (
         # Remove AREA_DETECTOR related modules from $file
-        cd $HOME_EPICS_APPS/$SYNAPPSVER/support/xxx-5*/xxxApp/src &&
+        cd $HOME_EPICS_APPS/$SYNAPPS_VER_X_Y/support/xxx-5*/xxxApp/src &&
         if ! test -f $file.original; then
           cp -v $file $file.original || exit 1
         fi &&
@@ -811,20 +815,20 @@ if test -n "$SYNAPPSVER"; then
       }
     )
   fi &&
-  if test -z "$ASYNVER"; then
+  if test -z "$ASYN_VER_X_Y"; then
     #Need to compile asyn from synapps
-    run_make_in_dir $HOME_EPICS_APPS/$SYNAPPSVER/support/asyn-*/asyn
+    run_make_in_dir $HOME_EPICS_APPS/$SYNAPPS_VER_X_Y/support/asyn-*/asyn
   fi &&
-  run_make_in_dir $HOME_EPICS_APPS/$SYNAPPSVER/support/sscan* &&
-  run_make_in_dir $HOME_EPICS_APPS/$SYNAPPSVER/support/calc-* &&
-  run_make_in_dir $HOME_EPICS_APPS/$SYNAPPSVER/support/stream-* || {
-    echo >&2 failed $SYNAPPSVER PWD=$PWD PATH=$PATH
+  run_make_in_dir $HOME_EPICS_APPS/$SYNAPPS_VER_X_Y/support/sscan* &&
+  run_make_in_dir $HOME_EPICS_APPS/$SYNAPPS_VER_X_Y/support/calc-* &&
+  run_make_in_dir $HOME_EPICS_APPS/$SYNAPPS_VER_X_Y/support/stream-* || {
+    echo >&2 failed $SYNAPPS_VER_X_Y PWD=$PWD PATH=$PATH
     exit 1
   }
-  patch_motor_h $HOME_EPICS_APPS/$SYNAPPSVER/support/motor-*/motorApp/MotorSrc &&
-  comment_out_in_file $HOME_EPICS_APPS/$SYNAPPSVER/support/motor-*/motorApp/Makefile HytecSrc &&
-  run_make_in_dir $HOME_EPICS_APPS/$SYNAPPSVER/support/motor-*/motorApp || {
-    echo >&2 failed $SYNAPPSVER PWD=$PWD PATH=$PATH
+  patch_motor_h $HOME_EPICS_APPS/$SYNAPPS_VER_X_Y/support/motor-*/motorApp/MotorSrc &&
+  comment_out_in_file $HOME_EPICS_APPS/$SYNAPPS_VER_X_Y/support/motor-*/motorApp/Makefile HytecSrc &&
+  run_make_in_dir $HOME_EPICS_APPS/$SYNAPPS_VER_X_Y/support/motor-*/motorApp || {
+    echo >&2 failed $SYNAPPS_VER_X_Y PWD=$PWD PATH=$PATH
     exit 1
   }
   install_motor &&
@@ -834,6 +838,6 @@ if test -n "$SYNAPPSVER"; then
     exit 1
   }
 else
-  echo SYNAPPSVER not defined, skipping synApps
+  echo SYNAPPS_VER_X_Y not defined, skipping synApps
 fi
 
