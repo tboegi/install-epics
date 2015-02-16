@@ -7,7 +7,7 @@ BASH_ALIAS_EPICS=~/.epics
 EPICS_BASE_VER=3.14.12.3
 
 #Version for synApps
-SYNAPPSVER=5_6
+SYNAPPSVER=5_7
 
 #Version for ASYN
 ASYNVER=4-22
