@@ -328,8 +328,7 @@ fix_epics_base()
       -e "s!^SUPPORT=.*!SUPPORT=$EPICS_ROOT/$SYNAPPS_VER_X_Y/support!" \
       -e "s!^EPICS_BASE=.*!EPICS_BASE=$EPICS_ROOT/base!" \
       -e "s!^\(IPAC=.*\)!## rem by install-epics \1!" \
-      -e "s!^\(SNCSEQ=.*\)!## rem by install-epics \1!" \
-      -e "s!^BUSY=.*!BUSY=\$(SUPPORT)/busy-1-4!" &&
+      -e "s!^\(SNCSEQ=.*\)!## rem by install-epics \1!"
       mv -fv "$file.$$.tmp" "$file" &&
       if test "$ASYN_VER_X_Y"; then
         sed <"$file" >"$file.$$.tmp" \
