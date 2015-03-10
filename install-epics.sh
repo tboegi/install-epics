@@ -4,7 +4,9 @@ BASHRC=~/.bashrc
 BASH_ALIAS_EPICS=~/.epics
 
 #Version of base
-EPICS_BASE_VER=3.14.12.3
+#EPICS_BASE_VER=3.14.12.3
+
+EPICS_BASE_VER=3.14.12.5-rc1
 
 #Version for synApps
 SYNAPPSVER=5_7
@@ -430,6 +432,9 @@ index f054802..d59a420 100644
  CODE_LDFLAGS = $(PROF_CXXFLAGS_$(PROFILE)) $(GPROF_CXXFLAGS_$(GPROF))
  
 EOF
+      ;;
+      *3.14.12.5-rc1*)
+      return 0
       ;;
       *)
       echo >&2 "Can not patch $file, not supported"
