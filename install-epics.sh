@@ -19,17 +19,25 @@ MOTORVER=6-9
 #msi
 EPICS_MSI_VER=msi1-5
 
-
 ASYN_VER_X_Y=asyn$ASYNVER
 MOTOR_VER_X_Y=motorR$MOTORVER
 
 SYNAPPS_VER_X_Y=synApps_$SYNAPPSVER
 
+# Debug version for e.g. kdbg
+if test "$EPICS_DEBUG" = ""; then
+  if type kdbg; then
+    EPICS_DEBUG=y
+  fi
+fi
 #Where are the binaries of EPICS
 if ! test "$EPICS_DOWNLOAD"; then
   EPICS_DOWNLOAD=/usr/local/epics
 fi
 EPICS_ROOT=/usr/local/epics/BASE_${EPICS_BASE_VER}_ASYN_${ASYNVER}_SYNAPPS_${SYNAPPSVER}_MOTOR_${MOTORVER}
+if test "$EPICS_DEBUG" = y; then
+  EPICS_ROOT=${EPICS_ROOT}_DBG
+fi
 EPICS_BASE=$EPICS_ROOT/base
 EPICS_MODULES=$EPICS_ROOT/modules
 
@@ -63,7 +71,7 @@ EPICS_EXTENSIONS_TOP_VER=extensionsTop_20120904
 #StreamDevice, later version than synApps
 #STREAMDEVICEVER=StreamDevice-2-6
 
-export EPICS_ROOT EPICS_BASE EPICS_MODULES EPICS_BASE_VER EPICS_ROOT
+export EPICS_ROOT EPICS_BASE EPICS_MODULES EPICS_BASE_VER EPICS_ROOT EPICS_DEBUG
 export EPICS_EXT=${EPICS_ROOT}/extensions
 #########################
 #apt or yum or port
@@ -618,7 +626,9 @@ EOF
       exit 1
     }
   fi &&
-  patch_CONFIG_gnuCommon $EPICS_ROOT/base/configure &&
+  if test "$EPICS_DEBUG" = y; then
+    patch_CONFIG_gnuCommon $EPICS_ROOT/base/configure
+  fi &&
   run_make_in_dir $EPICS_ROOT/base || {
     echo >&2 failed in $PWD
     exit 1
