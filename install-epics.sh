@@ -34,7 +34,7 @@ fi
 if ! test "$EPICS_DOWNLOAD"; then
   EPICS_DOWNLOAD=/usr/local/epics
 fi
-EPICS_ROOT=/usr/local/epics/BASE_${EPICS_BASE_VER}_ASYN_${ASYNVER}_SYNAPPS_${SYNAPPSVER}_MOTOR_${MOTORVER}
+EPICS_ROOT=$EPICS_DOWNLOAD/BASE_${EPICS_BASE_VER}_ASYN_${ASYNVER}_SYNAPPS_${SYNAPPSVER}_MOTOR_${MOTORVER}
 if test "$EPICS_DEBUG" = y; then
   EPICS_ROOT=${EPICS_ROOT}_DBG
 fi
@@ -122,7 +122,7 @@ create_soft_x_y() {
 if ! test -d $EPICS_ROOT; then
   echo $SUDO mkdir -p $EPICS_ROOT &&
   $SUDO mkdir -p $EPICS_ROOT || {
-    echo >&2 can not chown $EPICS_ROOT
+    echo >&2 can not mkdir $EPICS_ROOT
     exit 1
   }
 fi
