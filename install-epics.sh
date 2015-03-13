@@ -7,7 +7,7 @@ BASH_ALIAS_EPICS=~/.epics
 EPICS_BASE_VER=3.14.12.3
 
 #Version for synApps
-SYNAPPSVER=5_7
+#SYNAPPSVER=5_7
 
 #Version for ASYN
 ASYNVER=4-22
@@ -22,7 +22,9 @@ EPICS_MSI_VER=msi1-5
 ASYN_VER_X_Y=asyn$ASYNVER
 MOTOR_VER_X_Y=motorR$MOTORVER
 
-SYNAPPS_VER_X_Y=synApps_$SYNAPPSVER
+if test -n "$SYNAPPSVER"; then
+  SYNAPPS_VER_X_Y=synApps_$SYNAPPSVER
+fi
 
 # Debug version for e.g. kdbg
 if test "$EPICS_DEBUG" = ""; then
@@ -34,7 +36,12 @@ fi
 if ! test "$EPICS_DOWNLOAD"; then
   EPICS_DOWNLOAD=/usr/local/epics
 fi
-EPICS_ROOT=$EPICS_DOWNLOAD/BASE_${EPICS_BASE_VER}_ASYN_${ASYNVER}_SYNAPPS_${SYNAPPSVER}_MOTOR_${MOTORVER}
+EPICS_ROOT=$EPICS_DOWNLOAD/BASE_${EPICS_BASE_VER}_ASYN_${ASYNVER}
+if test -n "$SYNAPPSVER"; then
+  EPICS_ROOT=${EPICS_ROOT}_SYNAPPS_${SYNAPPSVER}
+fi
+EPICS_ROOT=EPICS_ROOT=${EPICS_ROOT}_MOTOR_${MOTORVER}
+
 if test "$EPICS_DEBUG" = y; then
   EPICS_ROOT=${EPICS_ROOT}_DBG
 fi
@@ -58,11 +65,20 @@ esac
 
 
 
-if test $SYNAPPS_VER_X_Y=synApps_5_6; then
+case "$SYNAPPS_VER_X_Y" in
+  synApps_5_6)
   MODSTOBEREMOVED="ALLEN_BRADLEY DAC128V IP330 IPUNIDIG LOVE IP VAC SOFTGLUE QUADEM DELAYGEN CAMAC VME AREA_DETECTOR DXP"
-else
+  ;;
+  synApps_5_7)
   MODSTOBEREMOVED="ALLEN_BRADLEY AREA_DETECTOR AUTOSAVE CAMAC DAC128V DXP DELAYGEN IP IP330 IPUNIDIG LOVE MCA MEASCOMP OPTICS QUADEM SOFTGLUE STD SNCSEQ VAC VME"
-fi
+  ;;
+  '')
+  ;;
+  *)
+  echo >&2 "Invalid version for synapps $SYNAPPS_VER_X_Y"
+  exit 1
+  ;;
+esac
 
 #extensions top
 EPICS_EXTENSIONS_TOP_VER=extensionsTop_20120904
@@ -79,6 +95,7 @@ if uname -a | egrep "CYGWIN|MING" >/dev/null; then
   SUDO=
 else
   SUDO=sudo
+  SUDO=
 fi
 APTGET=/bin/false
 if type apt-get >/dev/null 2>/dev/null; then
