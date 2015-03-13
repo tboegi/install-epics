@@ -40,7 +40,7 @@ EPICS_ROOT=$EPICS_DOWNLOAD/BASE_${EPICS_BASE_VER}_ASYN_${ASYNVER}
 if test -n "$SYNAPPSVER"; then
   EPICS_ROOT=${EPICS_ROOT}_SYNAPPS_${SYNAPPSVER}
 fi
-EPICS_ROOT=EPICS_ROOT=${EPICS_ROOT}_MOTOR_${MOTORVER}
+EPICS_ROOT=${EPICS_ROOT}_MOTOR_${MOTORVER}
 
 if test "$EPICS_DEBUG" = y; then
   EPICS_ROOT=${EPICS_ROOT}_DBG
@@ -303,7 +303,7 @@ install_motor_X_Y ()
             cd $path &&
             (
               fix_epics_base EPICS_BASE.$EPICS_HOST_ARCH &&
-                fix_epics_base SUPPORT.$EPICS_HOST_ARCH
+              fix_epics_base SUPPORT.$EPICS_HOST_ARCH
             )
       fi
   ) &&
@@ -320,7 +320,9 @@ install_motor_X_Y ()
     comment_out_in_file Makefile HytecSrc AerotechSrc
   ) &&
   (
-    run_make_in_dir $EPICS_ROOT/$MOTOR_VER_X_Y
+    echo run_make_in_dir $EPICS_ROOT/$MOTOR_VER_X_Y &&
+    run_make_in_dir $EPICS_ROOT/$MOTOR_VER_X_Y &&
+    echo done run_make_in_dir $EPICS_ROOT/$MOTOR_VER_X_Y
   ) || {
     echo >&2 failed $MOTOR_VER_X_Y
     exit 1
@@ -938,24 +940,28 @@ if test -n "$SYNAPPS_VER_X_Y"; then
     echo >&2 failed RELEASE in $PWD
     exit 1
   }
-  if test "$EPICS_EXTENSIONS_TOP_VER"; then
-    (
-      cd $EPICS_ROOT &&
-      if ! test -f $EPICS_EXTENSIONS_TOP_VER.tar.gz; then
-        echo installing $EPICS_EXTENSIONS_TOP_VER &&
-        wget_or_curl http://www.aps.anl.gov/epics/download/extensions/$EPICS_EXTENSIONS_TOP_VER.tar.gz  $EPICS_EXTENSIONS_TOP_VER.tar.gz
-      fi
-      if ! test -d ${EPICS_EXTENSIONS_TOP_VER}; then
-        tar xzf $EPICS_EXTENSIONS_TOP_VER.tar.gz
-      fi
-    )
-  fi &&
-  if ! type re2c >/dev/null 2>/dev/null; then
-    echo $APTGET re2c
-    $APTGET re2c || install_re2c
-  fi &&
-  if test "$EPICS_MSI_VER"; then
-    (
+else
+  echo SYNAPPS_VER_X_Y not defined, skipping synApps
+fi
+
+if test "$EPICS_EXTENSIONS_TOP_VER"; then
+  (
+    cd $EPICS_ROOT &&
+    if ! test -f $EPICS_EXTENSIONS_TOP_VER.tar.gz; then
+      echo installing $EPICS_EXTENSIONS_TOP_VER &&
+      wget_or_curl http://www.aps.anl.gov/epics/download/extensions/$EPICS_EXTENSIONS_TOP_VER.tar.gz  $EPICS_EXTENSIONS_TOP_VER.tar.gz
+    fi
+    if ! test -d ${EPICS_EXTENSIONS_TOP_VER}; then
+      tar xzf $EPICS_EXTENSIONS_TOP_VER.tar.gz
+    fi
+  )
+fi &&
+if ! type re2c >/dev/null 2>/dev/null; then
+  echo $APTGET re2c
+  $APTGET re2c || install_re2c
+fi &&
+if test "$EPICS_MSI_VER"; then
+  (
       cd $EPICS_ROOT &&
       if ! test -f $EPICS_MSI_VER.tar.gz; then
         echo installing $EPICS_MSI_VER &&
@@ -974,36 +980,35 @@ if test -n "$SYNAPPS_VER_X_Y"; then
         echo >&2 msi failed in $PWD
         exit 1
       }
-    )
-  fi &&
-  if test -z "$ASYN_VER_X_Y"; then
-    #Need to compile asyn from synapps
-    run_make_in_dir $EPICS_ROOT/$SYNAPPS_VER_X_Y/support/asyn-*/asyn
-  fi &&
+  )
+fi &&
+if test -z "$ASYN_VER_X_Y"; then
+  #Need to compile asyn from synapps
+  run_make_in_dir $EPICS_ROOT/$SYNAPPS_VER_X_Y/support/asyn-*/asyn
+fi &&
+if test -n "$SYNAPPS_VER_X_Y"; then
   run_make_in_dir $EPICS_ROOT/$SYNAPPS_VER_X_Y/support/sscan* &&
   run_make_in_dir $EPICS_ROOT/$SYNAPPS_VER_X_Y/support/calc-* &&
   run_make_in_dir $EPICS_ROOT/$SYNAPPS_VER_X_Y/support/stream-* || {
     echo >&2 failed $SYNAPPS_VER_X_Y PWD=$PWD PATH=$PATH
     exit 1
   }
-
-  if test -z "MOTORVER"; then
-    patch_motor_h $EPICS_ROOT/$SYNAPPS_VER_X_Y/support/motor-*/motorApp/MotorSrc &&
-    comment_out_in_file $EPICS_ROOT/$SYNAPPS_VER_X_Y/support/motor-*/motorApp/Makefile HytecSrc &&
-    run_make_in_dir $EPICS_ROOT/$SYNAPPS_VER_X_Y/support/motor-*/motorApp || {
-      echo >&2 failed $SYNAPPS_VER_X_Y PWD=$PWD PATH=$PATH
-      exit 1
-    }
-    install_motor_from_synapps
-  else
-    install_motor_X_Y
-  fi &&
-  install_streamdevice &&
-  echo install motor streamdevice OK || {
-    echo >&2 failed install_streamdevice PWD=$PWD
+fi
+  
+if test -z "MOTORVER"; then
+  patch_motor_h $EPICS_ROOT/$SYNAPPS_VER_X_Y/support/motor-*/motorApp/MotorSrc &&
+  comment_out_in_file $EPICS_ROOT/$SYNAPPS_VER_X_Y/support/motor-*/motorApp/Makefile HytecSrc &&
+  run_make_in_dir $EPICS_ROOT/$SYNAPPS_VER_X_Y/support/motor-*/motorApp || {
+    echo >&2 failed $SYNAPPS_VER_X_Y PWD=$PWD PATH=$PATH
     exit 1
   }
+  install_motor_from_synapps
 else
-  echo SYNAPPS_VER_X_Y not defined, skipping synApps
-fi
+  install_motor_X_Y
+fi &&
+install_streamdevice &&
+echo install motor streamdevice OK || {
+  echo >&2 failed install_streamdevice PWD=$PWD
+  exit 1
+}
 
