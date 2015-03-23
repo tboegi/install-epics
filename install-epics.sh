@@ -10,7 +10,7 @@ EPICS_BASE_VER=3.14.12.3
 #SYNAPPSVER=5_7
 
 #Version for ASYN
-ASYNVER=4-22
+ASYNVER=4-26
 
 MOTORVER=6-9
 #http://www.aps.anl.gov/bcda/synApps/motor/tar/motorR6-8-1.tar.gz
