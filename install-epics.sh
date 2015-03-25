@@ -1035,7 +1035,7 @@ else
   install_motor_X_Y
 fi &&
 install_streamdevice &&
-echo install motor streamdevice OK || {
+echo install $EPICS_ROOT OK || {
   echo >&2 failed install_streamdevice PWD=$PWD
   exit 1
 }
