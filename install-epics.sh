@@ -135,7 +135,8 @@ create_soft_x_y() {
           echo >&2 can not link $src $dst
           exit 1
         }
-      fi &&
+      fi
+      linkdst=$(readlink $dst) || linkdst=""
       if test "$linkdst" != "$src"; then
         echo "$linkdst" != "$dst" &&
         echo PWD=$PWD $SUDO rm $dst &&
