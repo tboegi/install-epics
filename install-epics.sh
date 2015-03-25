@@ -123,17 +123,30 @@ create_soft_x_y() {
     cd "$dir" &&
     linkdst=$(readlink $dst) || linkdst=""
     if ! test "$linkdst" || test "$linkdst" != "$src"; then
+      # unlink, first as user, then as SUDO
+      if test "$linkdst" && test "$linkdst" != "$src"; then
+        echo "$linkdst" != "$dst" &&
+        echo PWD=$PWD rm $dst &&
+        rm -f $dst &&
+        echo PWD=$PWD ln -s $src $dst &&
+        ln -s $src $dst || {
+          echo >&2 can not link $src $dst
+          exit 1
+        }
+      fi &&
       if test "$linkdst" && test "$linkdst" != "$src"; then
         echo "$linkdst" != "$dst" &&
         echo PWD=$PWD $SUDO rm $dst &&
-        $SUDO rm -f $dst
-      fi &&
-        
-      echo PWD=$PWD $SUDO ln -s $src $dst &&
-      $SUDO ln -s $src $dst || {
-        echo >&2 can not link $src $dst
-        exit 1
-      }
+        $SUDO rm -f $dst || {
+          echo >&2 can not rm -f $dst
+          exit 1
+        }
+        echo PWD=$PWD $SUDO ln -s $src $dst &&
+        $SUDO ln -s $src $dst || {
+          echo >&2 can not link $src $dst
+          exit 1
+        }
+      fi
     fi
   )
 }
@@ -238,12 +251,17 @@ run_make_in_dir()
 
 install_asyn_ver()
 {
+  echo install_motor_from_synapps
   asyndir="$1"/
   cd $EPICS_ROOT/modules &&
   if test -L asyn; then
     echo rm asyn &&
     rm asyn
   fi &&
+  test -d $asyndir || {
+    echo >&2 Can not ln -sv $asyndir asyn
+    exit 1
+  }
   ln -sv $asyndir asyn || {
     echo >&2 Can not ln -sv $asyndir asyn
     exit 1
@@ -315,6 +333,7 @@ EOF
 
 install_motor_X_Y ()
 {
+  echo install_motor_X_Y
   create_soft_x_y $EPICS_ROOT/modules ../$MOTOR_VER_X_Y/ motor
   (
     cd $EPICS_ROOT &&
@@ -365,6 +384,7 @@ install_motor_X_Y ()
 
 install_motor_from_synapps()
 {
+  echo install_motor_from_synapps
   cd $EPICS_ROOT/modules &&
   if test -e motor; then
     echo rm -rf motor &&
@@ -830,7 +850,7 @@ if test -n "$ASYN_VER_X_Y"; then
 )
 else
   echo ASYN_VER_X_Y not defined, skipping asyn
-  install_asyn_ver ../$SYNAPPS_VER_X_Y/support/asyn-4-18
+  install_asyn_ver ../$SYNAPPS_VER_X_Y/support/asyn-4-*
 fi
 
 
@@ -1023,7 +1043,7 @@ if test -n "$SYNAPPS_VER_X_Y"; then
   }
 fi
   
-if test -z "MOTORVER"; then
+if test -z "$MOTORVER"; then
   patch_motor_h $EPICS_ROOT/$SYNAPPS_VER_X_Y/support/motor-*/motorApp/MotorSrc &&
   comment_out_in_file $EPICS_ROOT/$SYNAPPS_VER_X_Y/support/motor-*/motorApp/Makefile HytecSrc &&
   run_make_in_dir $EPICS_ROOT/$SYNAPPS_VER_X_Y/support/motor-*/motorApp || {
