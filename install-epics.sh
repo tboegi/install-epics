@@ -19,9 +19,6 @@ SYNAPPSVER=5_7
 #msi
 EPICS_MSI_VER=msi1-5
 
-ASYN_VER_X_Y=asyn$ASYNVER
-MOTOR_VER_X_Y=motorR$MOTORVER
-
 if test -n "$SYNAPPSVER"; then
   SYNAPPS_VER_X_Y=synApps_$SYNAPPSVER
 fi
@@ -39,12 +36,14 @@ fi
 
 EPICS_ROOT=$EPICS_DOWNLOAD/BASE_${EPICS_BASE_VER}
 if test -n "$ASYNVER"; then
+  ASYN_VER_X_Y=asyn$ASYNVER
   EPICS_ROOT=${EPICS_ROOT}_ASYN_${ASYNVER}
 fi
 if test -n "$SYNAPPSVER"; then
   EPICS_ROOT=${EPICS_ROOT}_SYNAPPS_${SYNAPPSVER}
 fi
 if test -n "$MOTORVER"; then
+  MOTOR_VER_X_Y=motorR$MOTORVER
   EPICS_ROOT=${EPICS_ROOT}_MOTOR_${MOTORVER}
 fi
 
@@ -101,7 +100,6 @@ if uname -a | egrep "CYGWIN|MING" >/dev/null; then
   SUDO=
 else
   SUDO=sudo
-  SUDO=
 fi
 APTGET=/bin/false
 if type apt-get >/dev/null 2>/dev/null; then
@@ -198,6 +196,18 @@ wget_or_curl()
   ln -s $EPICS_DOWNLOAD/$file $file
 }
 
+#add package x when y is not there
+addpacketifneeded() {
+  needed=$1
+  tobeinstalled=$2
+  if test -z "$tobeinstalled"; then
+    tobeinstalled=$needed
+  fi
+  if ! which $needed ; then
+    echo $APTGET $tobeinstalled
+    $APTGET $tobeinstalled
+  fi
+}
 
 install_re2c()
 {
@@ -208,6 +218,7 @@ install_re2c()
   fi &&
   (
     cd re2c-code-git/re2c &&
+    addpacketifneeded automake &&
     ./autogen.sh &&
     ./configure &&
     make &&
@@ -223,6 +234,20 @@ run_make_in_dir()
     cd $dir &&
     make
   )
+}
+
+install_asyn_ver()
+{
+  asyndir="$1"/
+  cd $EPICS_ROOT/modules &&
+  if test -L asyn; then
+    echo rm asyn &&
+    rm asyn
+  fi &&
+  ln -sv $asyndir asyn || {
+    echo >&2 Can not ln -sv $asyndir asyn
+    exit 1
+  }
 }
 
 patch_motor_h()
@@ -313,33 +338,29 @@ install_motor_X_Y ()
             )
       fi
   ) &&
-  (
-    cd $EPICS_ROOT/$MOTOR_VER_X_Y/configure && {
-      for f in $(find . -name "RELEASE*" ); do
-        echo f=$f
-        fix_epics_base $f
-      done
+  if test -n "$MOTORVER"; then
+    (
+      cd $EPICS_ROOT/$MOTOR_VER_X_Y/configure && {
+        for f in $(find . -name "RELEASE*" ); do
+          echo f=$f
+          fix_epics_base $f
+        done
+      }
+    ) &&
+    (
+      cd $EPICS_ROOT/$MOTOR_VER_X_Y/motorApp &&
+      comment_out_in_file Makefile HytecSrc AerotechSrc
+    ) &&
+    (
+      echo run_make_in_dir $EPICS_ROOT/$MOTOR_VER_X_Y &&
+      run_make_in_dir $EPICS_ROOT/$MOTOR_VER_X_Y &&
+      echo done run_make_in_dir $EPICS_ROOT/$MOTOR_VER_X_Y
+    ) || {
+      echo >&2 failed $MOTOR_VER_X_Y
+      exit 1
     }
-  ) &&
-  (
-    cd $EPICS_ROOT/$MOTOR_VER_X_Y/motorApp &&
-    comment_out_in_file Makefile HytecSrc AerotechSrc
-  ) &&
-  (
-    echo run_make_in_dir $EPICS_ROOT/$MOTOR_VER_X_Y &&
-    run_make_in_dir $EPICS_ROOT/$MOTOR_VER_X_Y &&
-    echo done run_make_in_dir $EPICS_ROOT/$MOTOR_VER_X_Y
-  ) || {
-    echo >&2 failed $MOTOR_VER_X_Y
-    exit 1
-  }
+  fi
 }
-
-
-
-
-
-
 
 
 install_motor_from_synapps()
