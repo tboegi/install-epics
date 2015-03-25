@@ -7,12 +7,12 @@ BASH_ALIAS_EPICS=~/.epics
 EPICS_BASE_VER=3.14.12.3
 
 #Version for synApps
-#SYNAPPSVER=5_7
+SYNAPPSVER=5_7
 
 #Version for ASYN
-ASYNVER=4-26
+#ASYNVER=4-26
 
-MOTORVER=6-9
+#MOTORVER=6-9
 #http://www.aps.anl.gov/bcda/synApps/motor/tar/motorR6-8-1.tar.gz
 #http://www.aps.anl.gov/bcda/synApps/motor/tar/motorR6-9.tar.gz
 
@@ -36,11 +36,17 @@ fi
 if ! test "$EPICS_DOWNLOAD"; then
   EPICS_DOWNLOAD=/usr/local/epics
 fi
-EPICS_ROOT=$EPICS_DOWNLOAD/BASE_${EPICS_BASE_VER}_ASYN_${ASYNVER}
+
+EPICS_ROOT=$EPICS_DOWNLOAD/BASE_${EPICS_BASE_VER}
+if test -n "$ASYNVER"; then
+  EPICS_ROOT=${EPICS_ROOT}_ASYN_${ASYNVER}
+fi
 if test -n "$SYNAPPSVER"; then
   EPICS_ROOT=${EPICS_ROOT}_SYNAPPS_${SYNAPPSVER}
 fi
-EPICS_ROOT=${EPICS_ROOT}_MOTOR_${MOTORVER}
+if test -n "$MOTORVER"; then
+  EPICS_ROOT=${EPICS_ROOT}_MOTOR_${MOTORVER}
+fi
 
 if test "$EPICS_DEBUG" = y; then
   EPICS_ROOT=${EPICS_ROOT}_DBG
