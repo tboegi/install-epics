@@ -4,15 +4,15 @@ BASHRC=~/.bashrc
 BASH_ALIAS_EPICS=~/.epics
 
 #Version of base
-EPICS_BASE_VER=3.14.12.3
+EPICS_BASE_VER=3.14.12.5
 
 #Version for synApps
-SYNAPPSVER=5_7
+#SYNAPPSVER=5_7
 
 #Version for ASYN
-#ASYNVER=4-26
+ASYNVER=4-26
 
-#MOTORVER=6-9
+MOTORVER=6-9
 #http://www.aps.anl.gov/bcda/synApps/motor/tar/motorR6-8-1.tar.gz
 #http://www.aps.anl.gov/bcda/synApps/motor/tar/motorR6-9.tar.gz
 
@@ -116,15 +116,17 @@ export APTGET
 #########################
 
 create_soft_x_y() {
+  echo create_soft_x_y "$@"
   dir=$1
   src=$2
   dst=$3
+  export dir src dst
   (
     cd "$dir" &&
     linkdst=$(readlink $dst) || linkdst=""
     if ! test "$linkdst" || test "$linkdst" != "$src"; then
       # unlink, first as user, then as SUDO
-      if test "$linkdst" && test "$linkdst" != "$src"; then
+      if test "$linkdst" != "$src"; then
         echo "$linkdst" != "$dst" &&
         echo PWD=$PWD rm $dst &&
         rm -f $dst &&
@@ -134,7 +136,7 @@ create_soft_x_y() {
           exit 1
         }
       fi &&
-      if test "$linkdst" && test "$linkdst" != "$src"; then
+      if test "$linkdst" != "$src"; then
         echo "$linkdst" != "$dst" &&
         echo PWD=$PWD $SUDO rm $dst &&
         $SUDO rm -f $dst || {
@@ -154,8 +156,8 @@ create_soft_x_y() {
 
 ########################
 if ! test -d $EPICS_ROOT; then
-  echo $SUDO mkdir -p $EPICS_ROOT &&
-  $SUDO mkdir -p $EPICS_ROOT || {
+  echo mkdir -p $EPICS_ROOT &&
+  mkdir -p $EPICS_ROOT || {
     echo >&2 can not mkdir $EPICS_ROOT
     exit 1
   }
