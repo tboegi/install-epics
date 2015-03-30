@@ -73,12 +73,15 @@ esac
 case "$SYNAPPS_VER_X_Y" in
   synApps_5_6)
   MODSTOBEREMOVED="ALLEN_BRADLEY DAC128V IP330 IPUNIDIG LOVE IP VAC SOFTGLUE QUADEM DELAYGEN CAMAC VME AREA_DETECTOR DXP"
+  MODSFROMMAKEFILE='ADSupport NDPlugin simDetector netCDF dxp "xxx_Common_LIBS += ip"'
   ;;
   synApps_5_7)
   MODSTOBEREMOVED="ALLEN_BRADLEY AREA_DETECTOR AUTOSAVE CAMAC DAC128V DXP DELAYGEN IP IP330 IPUNIDIG LOVE MCA MEASCOMP OPTICS QUADEM SOFTGLUE STD SNCSEQ VAC VME"
+  MODSFROMMAKEFILE='ADSupport NDPlugin simDetector netCDF dxp "xxx_Common_LIBS += ip"'
   ;;
   synApps_5_8)
   MODSTOBEREMOVED="ALLEN_BRADLEY AREA_DETECTOR AUTOSAVE CAMAC DAC128V DXP DELAYGEN IP IP330 IPUNIDIG LOVE MCA MEASCOMP OPTICS QUADEM SOFTGLUE STD SNCSEQ VAC VME"
+  MODSFROMMAKEFILE='ADSupport NDPlugin simDetector dxp'
   ;;
   '')
   ;;
@@ -857,14 +860,14 @@ if test -n "$ASYN_VER_X_Y"; then
     }
 )
 else
-  echo ASYN_VER_X_Y not defined, skipping asyn
-  install_asyn_ver ../$SYNAPPS_VER_X_Y/support/asyn-4-*
+  echo no special ASYN_VER_X_Y defined
 fi
 
 
 #synApps
 if test -n "$SYNAPPS_VER_X_Y"; then
   (
+    echo XXX SYNAPPS_VER_X_Y defined
     cd $EPICS_ROOT &&
     if ! test -f $SYNAPPS_VER_X_Y.tar.gz; then
       wget_or_curl http://www.aps.anl.gov/bcda/synApps/tar/$SYNAPPS_VER_X_Y.tar.gz $SYNAPPS_VER_X_Y.tar.gz
@@ -964,12 +967,14 @@ if test -n "$SYNAPPS_VER_X_Y"; then
       (
         # Remove AREA_DETECTOR and IP from dbd
         cd $EPICS_ROOT/$SYNAPPS_VER_X_Y/support/xxx-5*/xxxApp/src &&
-        if ! test -f xxxCommonInclude.dbd.original; then
-          cp -v xxxCommonInclude.dbd xxxCommonInclude.dbd.original || exit 1
-        fi &&
-        sed <xxxCommonInclude.dbd.original >xxxCommonInclude.dbd.$$.tmp \
-          -e "s!\(include.*ipSupport.dbd\)!#\1!" &&
-        mv -fv xxxCommonInclude.dbd.$$.tmp xxxCommonInclude.dbd
+        if test -f xxxCommonInclude.dbd; then
+          if ! test -f xxxCommonInclude.dbd.original; then
+            cp -v xxxCommonInclude.dbd xxxCommonInclude.dbd.original || exit 1
+          fi &&
+          sed <xxxCommonInclude.dbd.original >xxxCommonInclude.dbd.$$.tmp \
+            -e "s!\(include.*ipSupport.dbd\)!#\1!" &&
+          mv -fv xxxCommonInclude.dbd.$$.tmp xxxCommonInclude.dbd
+        fi
       ) &&
       (
         # Remove AREA_DETECTOR related modules from $file
@@ -978,7 +983,7 @@ if test -n "$SYNAPPS_VER_X_Y"; then
           cp -v $file $file.original || exit 1
         fi &&
         cp $file.original $file &&
-        for mod in ADSupport NDPlugin simDetector netCDF dxp "xxx_Common_LIBS += ip"; do
+        for mod in $MODSFROMMAKEFILE; do
           echo removing $mod in $PWD/$file &&
           sed -e "s/\(.*$mod.*\)/#XXX Removed by install-epics.sh XXX  \1/g" <$file >$file.$$.tmp &&
           ! diff $file $file.$$.tmp >/dev/null &&
@@ -995,9 +1000,18 @@ if test -n "$SYNAPPS_VER_X_Y"; then
   ) || {
     echo >&2 failed RELEASE in $PWD
     exit 1
-  }
+  } &&
+  if test -z "$ASYN_VER_X_Y"; then
+    (
+      echo ASYN_VER_X_Y not defined, use asyn from synapps
+      install_asyn_ver ../$SYNAPPS_VER_X_Y/support/asyn-4-*
+    )
+fi
+
+
+
 else
-  echo SYNAPPS_VER_X_Y not defined, skipping synApps
+  echo XXX SYNAPPS_VER_X_Y not defined, skipping synApps
 fi
 
 if test "$EPICS_EXTENSIONS_TOP_VER"; then
