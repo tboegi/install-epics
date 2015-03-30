@@ -1064,7 +1064,7 @@ fi
   
 if test -z "$MOTORVER"; then
   patch_motor_h $EPICS_ROOT/$SYNAPPS_VER_X_Y/support/motor-*/motorApp/MotorSrc &&
-  comment_out_in_file $EPICS_ROOT/$SYNAPPS_VER_X_Y/support/motor-*/motorApp/Makefile HytecSrc &&
+  comment_out_in_file $EPICS_ROOT/$SYNAPPS_VER_X_Y/support/motor-*/motorApp/Makefile HytecSrc AerotechSrc &&
   run_make_in_dir $EPICS_ROOT/$SYNAPPS_VER_X_Y/support/motor-*/motorApp || {
     echo >&2 failed $SYNAPPS_VER_X_Y PWD=$PWD PATH=$PATH
     exit 1
