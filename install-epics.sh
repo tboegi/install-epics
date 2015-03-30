@@ -1006,10 +1006,7 @@ if test -n "$SYNAPPS_VER_X_Y"; then
       echo ASYN_VER_X_Y not defined, use asyn from synapps
       install_asyn_ver ../$SYNAPPS_VER_X_Y/support/asyn-4-*
     )
-fi
-
-
-
+  fi
 else
   echo XXX SYNAPPS_VER_X_Y not defined, skipping synApps
 fi
