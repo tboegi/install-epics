@@ -651,7 +651,7 @@ EOF
 fi
 
 #update .epics
-cat >${BASH_ALIAS_EPICS} <<EOF
+cat >${BASH_ALIAS_EPICS} <<EOF &&
 export EPICS_DEBUG=$EPICS_DEBUG
 export EPICS_DOWNLOAD=$EPICS_DOWNLOAD
 export EPICS_ROOT=$EPICS_ROOT
@@ -671,6 +671,8 @@ else
 fi
 export PATH=\$PATH:\$EPICS_BASE_BIN:\$EPICS_EXT_BIN
 EOF
+
+cp $BASH_ALIAS_EPICS $EPICS_ROOT.$EPICS_HOST_ARCH &&
 ################
 
 (
