@@ -7,12 +7,12 @@ BASH_ALIAS_EPICS=~/.epics
 EPICS_BASE_VER=3.14.12.5
 
 #Version for synApps
-#SYNAPPSVER=5_7
+SYNAPPSVER=5_8
 
 #Version for ASYN
-ASYNVER=4-26
+#ASYNVER=4-26
 
-MOTORVER=6-9
+#MOTORVER=6-9
 #http://www.aps.anl.gov/bcda/synApps/motor/tar/motorR6-8-1.tar.gz
 #http://www.aps.anl.gov/bcda/synApps/motor/tar/motorR6-9.tar.gz
 
@@ -75,6 +75,9 @@ case "$SYNAPPS_VER_X_Y" in
   MODSTOBEREMOVED="ALLEN_BRADLEY DAC128V IP330 IPUNIDIG LOVE IP VAC SOFTGLUE QUADEM DELAYGEN CAMAC VME AREA_DETECTOR DXP"
   ;;
   synApps_5_7)
+  MODSTOBEREMOVED="ALLEN_BRADLEY AREA_DETECTOR AUTOSAVE CAMAC DAC128V DXP DELAYGEN IP IP330 IPUNIDIG LOVE MCA MEASCOMP OPTICS QUADEM SOFTGLUE STD SNCSEQ VAC VME"
+  ;;
+  synApps_5_8)
   MODSTOBEREMOVED="ALLEN_BRADLEY AREA_DETECTOR AUTOSAVE CAMAC DAC128V DXP DELAYGEN IP IP330 IPUNIDIG LOVE MCA MEASCOMP OPTICS QUADEM SOFTGLUE STD SNCSEQ VAC VME"
   ;;
   '')
@@ -262,7 +265,7 @@ install_asyn_ver()
     rm asyn
   fi &&
   test -d $asyndir || {
-    echo >&2 Can not ln -sv $asyndir asyn
+    echo >&2 PWD=$PWD Can not ln -sv $asyndir asyn
     exit 1
   }
   ln -sv $asyndir asyn || {
