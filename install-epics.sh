@@ -4,7 +4,7 @@ BASHRC=~/.bashrc
 BASH_ALIAS_EPICS=~/.epics
 
 #Version of base
-EPICS_BASE_VER=3.14.12.5
+EPICS_BASE_VER=3.15.1
 
 #Version for synApps
 SYNAPPSVER=5_8
@@ -31,10 +31,10 @@ if test "$EPICS_DEBUG" = ""; then
 fi
 #Where are the binaries of EPICS
 if ! test "$EPICS_DOWNLOAD"; then
-  EPICS_DOWNLOAD=/usr/local/epics
+  EPICS_DOWNLOAD=/usr/local/esss
 fi
 
-EPICS_ROOT=$EPICS_DOWNLOAD/BASE_${EPICS_BASE_VER}
+EPICS_ROOT=$EPICS_DOWNLOAD/EPICS_BASE_${EPICS_BASE_VER}
 if test -n "$ASYNVER"; then
   ASYN_VER_X_Y=asyn$ASYNVER
   EPICS_ROOT=${EPICS_ROOT}_ASYN_${ASYNVER}
@@ -612,13 +612,24 @@ comment_out_in_file()
 
 
 (
+  case "$EPICS_BASE_VER" in
+    3.15.1)
+    SEP="-"
+    ;;
+    3.14.12.*)
+    SEP=R
+    ;;
+    *)
+    exit 0
+  esac
+
   cd $EPICS_ROOT &&
-  if ! test -f baseR${EPICS_BASE_VER}.tar.gz; then
-    wget_or_curl http://www.aps.anl.gov/epics/download/base/baseR${EPICS_BASE_VER}.tar.gz baseR${EPICS_BASE_VER}.tar.gz
+  if ! test -f base${SEP}${EPICS_BASE_VER}.tar.gz; then
+    wget_or_curl http://www.aps.anl.gov/epics/download/base/base${SEP}${EPICS_BASE_VER}.tar.gz base${SEP}${EPICS_BASE_VER}.tar.gz
   fi
   if ! test -d base-$EPICS_BASE_VER; then
-    tar xzf baseR${EPICS_BASE_VER}.tar.gz || {
-      echo >&2 can not tar xzf baseR${EPICS_BASE_VER}.tar.gz
+    tar xzf base${SEP}${EPICS_BASE_VER}.tar.gz || {
+      echo >&2 can not tar xzf base${SEP}${EPICS_BASE_VER}.tar.gz
       rm -rf base-$EPICS_BASE_VER
       exit 1
     }
