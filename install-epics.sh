@@ -485,7 +485,7 @@ patch_CONFIG_gnuCommon()
     fi &&
     cp $file.original $file &&
     case $PWD in
-      *3.14.12.3*)
+      *3.14.12.3*|*3.15.1*)
       cat <<\EOF > "$file.patch"
 diff --git a/CONFIG.gnuCommon b/CONFIG.gnuCommon
 index f054802..d59a420 100644
@@ -515,7 +515,7 @@ index f054802..d59a420 100644
 EOF
       ;;
       *)
-      echo >&2 "Can not patch $file, not supported"
+      echo >&2 "PWD=$PWD Can not patch $file, not supported"
       exit 1
     esac &&
     patch < "$file.patch"
