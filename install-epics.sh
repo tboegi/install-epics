@@ -10,7 +10,7 @@ EPICS_BASE_VER=3.15.1
 SYNAPPSVER=5_8
 
 #Version for ASYN
-#ASYNVER=4-26
+ASYNVER=GIT
 
 #MOTORVER=6-9
 #http://www.aps.anl.gov/bcda/synApps/motor/tar/motorR6-8-1.tar.gz
@@ -78,7 +78,9 @@ else
   LN=ln
   MKDIR=mkdir
   MV=mv
+  SUDO=
 fi
+export CP LN MKDIR MV SUDO
 
 case "$SYNAPPS_VER_X_Y" in
   synApps_5_6)
@@ -146,8 +148,8 @@ create_soft_x_y() {
         echo "$linkdst" != "$dst" &&
         echo PWD=$PWD rm $dst &&
         rm -f $dst &&
-        echo PWD=$PWD ln -s $src $dst &&
-        ln -s $src $dst || {
+        echo PWD=$PWD $LN -s $src $dst &&
+        $LN -s $src $dst || {
           echo >&2 can not link $src $dst
           exit 1
         }
@@ -160,8 +162,8 @@ create_soft_x_y() {
           echo >&2 can not rm -f $dst
           exit 1
         }
-        echo PWD=$PWD $SUDO ln -s $src $dst &&
-        $SUDO ln -s $src $dst || {
+        echo PWD=$PWD $SUDO $LN -s $src $dst &&
+        $SUDO $LN -s $src $dst || {
           echo >&2 can not link $src $dst
           exit 1
         }
@@ -225,7 +227,7 @@ wget_or_curl()
         fi
       fi
   ) &&
-  ln -s $EPICS_DOWNLOAD/$file $file
+  $LN -s $EPICS_DOWNLOAD/$file $file
 }
 
 #add package x when y is not there
@@ -264,7 +266,10 @@ run_make_in_dir()
   echo cd $dir &&
   (
     cd $dir &&
-    make
+    $SUDO make || {
+    echo >&2 PWD=$PWD Can not make
+    exit 1
+  }
   )
 }
 
@@ -278,11 +283,11 @@ install_asyn_ver()
     rm asyn
   fi &&
   test -d $asyndir || {
-    echo >&2 PWD=$PWD Can not ln -sv $asyndir asyn
+    echo >&2 PWD=$PWD Can not $LN -sv $asyndir asyn
     exit 1
   }
-  ln -sv $asyndir asyn || {
-    echo >&2 Can not ln -sv $asyndir asyn
+  $LN -sv $asyndir asyn || {
+    echo >&2 Can not $LN -sv $asyndir asyn
     exit 1
   }
 }
@@ -446,12 +451,12 @@ install_motor_from_synapps()
   (
     motorlib=$(find ../../$SYNAPPS_VER_X_Y/support/motor-*/ -name lib | sed -e "s!//!/!g");
     echo motorlib=$motorlib
-    ln -s "$motorlib" lib
+    $LN -s "$motorlib" lib
   ) &&
   (
     motorinclude=$(find ../../$SYNAPPS_VER_X_Y/support/motor-*/ -name include | sed -e "s!//!/!g");
     echo motorinclude=$motorinclude
-    ln -s "$motorinclude" include
+    $LN -s "$motorinclude" include
   )
 }
 
@@ -468,14 +473,14 @@ install_streamdevice()
     echo rm src &&
     rm src
   fi &&
-  echo ln -s ../../$SYNAPPS_VER_X_Y/support/$streamdevver/streamDevice/src/ src &&
-  ln -s ../../$SYNAPPS_VER_X_Y/support/$streamdevver/streamDevice/src/ src || exit 1
+  echo $LN -s ../../$SYNAPPS_VER_X_Y/support/$streamdevver/streamDevice/src/ src &&
+  $LN -s ../../$SYNAPPS_VER_X_Y/support/$streamdevver/streamDevice/src/ src || exit 1
   for f in dbd lib include; do
     if test -L $f; then
       echo rm $f &&
       rm $f
     fi &&
-    ln -s ../../$SYNAPPS_VER_X_Y/support/$streamdevver/$f/ $f || exit 1
+    $LN -s ../../$SYNAPPS_VER_X_Y/support/$streamdevver/$f/ $f || exit 1
   done
 }
 
@@ -546,17 +551,17 @@ fix_epics_base()
         exit 1
       }
     fi &&
-    sed <"$filebasename.original" >"$file.$$.tmp" \
+    sed <"$filebasename.original" >/tmp/$$.tmp \
       -e "s!^SUPPORT=.*!SUPPORT=$EPICS_ROOT/$SYNAPPS_VER_X_Y/support!" \
       -e "s!^EPICS_BASE=.*!EPICS_BASE=$EPICS_ROOT/base!" \
       -e "s!^\(IPAC=.*\)!## rem by install-epics \1!" \
       -e "s!^BUSY=.*!BUSY=\$(SUPPORT)/busy-1-6!" \
       -e "s!^\(SNCSEQ=.*\)!## rem by install-epics \1!"
-      $MV -fv "$file.$$.tmp" "$file" &&
+      $MV -fv /tmp/$$.tmp "$file" &&
       if test "$ASYN_VER_X_Y"; then
-        sed <"$file" >"$file.$$.tmp" \
+        sed <"$file" >/tmp/$$.tmp \
           -e "s!^ASYN=.*!ASYN=$EPICS_MODULES/asyn!" &&
-        $MV -fv "$file.$$.tmp" "$file"
+        $MV -fv /tmp/$$.tmp "$file"
     fi
   else
     echo fix_epics_base PWD=$PWD file=$file does not exist, doing nothing
@@ -844,13 +849,22 @@ if test -n "$ASYN_VER_X_Y"; then
 (
   create_soft_x_y $EPICS_ROOT/modules ../$ASYN_VER_X_Y/ asyn
     (
+      #Note1: asyn should be under modules/
+      #Note2: if "ASYNVER" = GIT
       cd $EPICS_ROOT &&
-      if ! test -f $ASYN_VER_X_Y.tar.gz; then
-        wget_or_curl http://www.aps.anl.gov/epics/download/modules/$ASYN_VER_X_Y.tar.gz $ASYN_VER_X_Y.tar.gz
-      fi
-      if ! test -d $ASYN_VER_X_Y; then
-        tar xzvf $ASYN_VER_X_Y.tar.gz
-      fi
+      if test "$ASYNVER" = GIT; then
+        if ! test -d $ASYN_VER_X_Y; then
+           $SUDO git clone https://github.com/epics-modules/asyn.git $ASYN_VER_X_Y ||
+             ( rm -rf $ASYN_VER_X_Y; /usr/bin/false )
+        fi
+      else
+        if ! test -f $ASYN_VER_X_Y.tar.gz; then
+          wget_or_curl http://www.aps.anl.gov/epics/download/modules/$ASYN_VER_X_Y.tar.gz $ASYN_VER_X_Y.tar.gz
+        fi
+        if ! test -d $ASYN_VER_X_Y; then
+          tar xzvf $ASYN_VER_X_Y.tar.gz
+        fi
+      fi  
     ) &&
     (
       # Need to fix epics base for synapss already here,
