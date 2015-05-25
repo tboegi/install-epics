@@ -68,7 +68,17 @@ case $yesno in
   exit 0
 esac
 
-
+if $(echo "$EPICS_ROOT" | grep -q /usr/local); then
+  CP="sudo cp"
+  LN="sudo ln"
+  MKDIR="sudo mkdir"
+  MV="sudo mv"
+else
+  CP=cp
+  LN=ln
+  MKDIR=mkdir
+  MV=mv
+fi
 
 case "$SYNAPPS_VER_X_Y" in
   synApps_5_6)
@@ -163,9 +173,9 @@ create_soft_x_y() {
 
 ########################
 if ! test -d $EPICS_ROOT; then
-  echo mkdir -p $EPICS_ROOT &&
-  mkdir -p $EPICS_ROOT || {
-    echo >&2 can not mkdir $EPICS_ROOT
+  echo $MKDIR -p $EPICS_ROOT &&
+  $MKDIR -p $EPICS_ROOT || {
+    echo >&2 can not $MKDIR $EPICS_ROOT
     exit 1
   }
 fi
@@ -179,7 +189,7 @@ if ! test -w $EPICS_ROOT; then
 fi
 
 if ! test -d /usr/local; then
-  sudo mkdir /usr/local
+  sudo $MKDIR /usr/local
 fi &&
 create_soft_x_y $EPICS_ROOT base-${EPICS_BASE_VER} base &&
 
@@ -196,8 +206,8 @@ wget_or_curl()
     cd $EPICS_DOWNLOAD &&
     if ! test -e $file; then
         if type curl >/dev/null 2>/dev/null; then
-            curl "$url" >"$file.$$.tmp" &&
-              mv "$file.$$.tmp" "$file" || {
+            curl "$url" >/tmp/"$file.$$.tmp" &&
+              $MV "/tmp/$file.$$.tmp" "$file" || {
                 echo >&2 curl can not get $url
                 exit 1
               }
@@ -208,7 +218,7 @@ wget_or_curl()
               $APTGET wget
           fi &&
             wget "$url" -O "$file.$$.tmp" &&
-            mv "$file.$$.tmp" "$file" || {
+            $MV "$file.$$.tmp" "$file" || {
               echo >&2 wget can not get $url
               exit 1
             }
@@ -236,7 +246,7 @@ install_re2c()
   cd $EPICS_ROOT &&
   if ! test -d re2c-code-git; then
     git clone git://git.code.sf.net/p/re2c/code-git re2c-code-git.$$.tmp &&
-    mv re2c-code-git.$$.tmp  re2c-code-git
+    $MV re2c-code-git.$$.tmp  re2c-code-git
   fi &&
   (
     cd re2c-code-git/re2c &&
@@ -287,9 +297,9 @@ patch_motor_h()
     fi &&
     echo PWD=$PWD patch motor.h &&
     if ! test -e motor.h.original; then
-      cp motor.h motor.h.original
+      $CP motor.h motor.h.original
     fi &&
-    cp motor.h.original motor.h &&
+    $CP motor.h.original motor.h &&
     case $PWD in
       *motor-6-7*)
       cat <<EOF >motor.patch
@@ -299,9 +309,9 @@ diff --git a/motorApp/MotorSrc/motor.h b/motorApp/MotorSrc/motor.h
 63a64
 > #include <epicsEndian.h>
 140c141
-< #elif (CPU == PPC604) || (CPU == PPC603) || (CPU==PPC85XX) || (CPU == MC68040) || (CPU == PPC32)
+< #elif ($CPU == PPC604) || ($CPU == PPC603) || ($CPU==PPC85XX) || ($CPU == MC68040) || ($CPU == PPC32)
 ---
-> #elif defined(CPU) && ((CPU == PPC604) || (CPU == PPC603) || (CPU == PPC85XX) || (CPU == MC68040) || (CPU == PPC32))
+> #elif defined($CPU) && (($CPU == PPC604) || ($CPU == PPC603) || ($CPU == PPC85XX) || ($CPU == MC68040) || ($CPU == PPC32))
 141a143,148
 > #elif defined(__GNUC__)
 >     #if (EPICS_BYTE_ORDER == EPICS_ENDIAN_LITTLE)
@@ -319,9 +329,9 @@ diff --git a/motorApp/MotorSrc/motor.h b/motorApp/MotorSrc/motor.h
 63a64
 > #include <epicsEndian.h>
 140c141
-< #elif (CPU == PPC604) || (CPU == PPC603) || (CPU == PPC85XX) || (CPU == MC68040) || (CPU == PPC32)
+< #elif ($CPU == PPC604) || ($CPU == PPC603) || ($CPU == PPC85XX) || ($CPU == MC68040) || ($CPU == PPC32)
 ---
-> #elif defined(CPU) && ((CPU == PPC604) || (CPU == PPC603) || (CPU == PPC85XX) || (CPU == MC68040) || (CPU == PPC32))
+> #elif defined($CPU) && (($CPU == PPC604) || ($CPU == PPC603) || ($CPU == PPC85XX) || ($CPU == MC68040) || ($CPU == PPC32))
 141a143,148
 > #elif defined(__GNUC__)
 >     #if (EPICS_BYTE_ORDER == EPICS_ENDIAN_LITTLE)
@@ -399,7 +409,7 @@ install_motor_from_synapps()
     echo rm -rf motor &&
     rm -rf motor
   fi &&
-  mkdir -p motor &&
+  $MKDIR -p motor &&
   cd motor &&
   motordevver=$(echo ../../$SYNAPPS_VER_X_Y/support/motor-*) &&
   echo motordevver=$motordevver &&
@@ -410,26 +420,26 @@ install_motor_from_synapps()
     fi
   done &&
   (
-    mkdir dbd &&
+    $MKDIR dbd &&
     cd dbd &&
     rm -rf * &&
     for mdbd in $(find ../../../$SYNAPPS_VER_X_Y/support/motor-* -name '*.dbd'); do
       dbdbasename="${mdbd##*/}" &&
       #echo mdbd=$mdbd dbdbasename=$dbdbasename &&
       if ! test -f $dbdbasename; then
-        cp -fv $mdbd $dbdbasename
+        $CP -fv $mdbd $dbdbasename
       fi
     done
   ) &&
   (
-    mkdir Db &&
+    $MKDIR Db &&
     cd Db &&
     rm -rf * &&
     for mdbd in $(find ../../../$SYNAPPS_VER_X_Y/support/motor-* -name '*.db'); do
       dbdbasename="${mdbd##*/}" &&
       #echo mdbd=$mdbd dbdbasename=$dbdbasename &&
       if ! test -f $dbdbasename; then
-        cp -fv $mdbd $dbdbasename
+        $CP -fv $mdbd $dbdbasename
       fi
     done
   ) &&
@@ -449,7 +459,7 @@ install_streamdevice()
 {
   cd $EPICS_ROOT/modules &&
   if ! test -d streamdevice; then
-    mkdir -p streamdevice
+    $MKDIR -p streamdevice
   fi &&
   cd streamdevice &&
   streamdevver=$(echo ../../$SYNAPPS_VER_X_Y/support/stream-*) &&
@@ -481,9 +491,9 @@ patch_CONFIG_gnuCommon()
     fi &&
     echo PWD=$PWD patch $file &&
     if ! test -e $file.original; then
-      cp $file $file.original
+      $CP $file $file.original
     fi &&
-    cp $file.original $file &&
+    $CP $file.original $file &&
     case $PWD in
       *3.14.12.3*|*3.15.1*)
       cat <<\EOF > "$file.patch"
@@ -531,8 +541,8 @@ fix_epics_base()
     filebasename="${file%*.original}" &&
     echo fix_epics_base PWD=$PWD file=$file filebasename=$filebasename &&
     if ! test -f "$filebasename.original"; then
-      cp "$file" "$filebasename.original" || {
-        echo >&2 failed cp -v $file $filebasename.original in $PWD
+      $CP "$file" "$filebasename.original" || {
+        echo >&2 failed $CP -v $file $filebasename.original in $PWD
         exit 1
       }
     fi &&
@@ -542,11 +552,11 @@ fix_epics_base()
       -e "s!^\(IPAC=.*\)!## rem by install-epics \1!" \
       -e "s!^BUSY=.*!BUSY=\$(SUPPORT)/busy-1-6!" \
       -e "s!^\(SNCSEQ=.*\)!## rem by install-epics \1!"
-      mv -fv "$file.$$.tmp" "$file" &&
+      $MV -fv "$file.$$.tmp" "$file" &&
       if test "$ASYN_VER_X_Y"; then
         sed <"$file" >"$file.$$.tmp" \
           -e "s!^ASYN=.*!ASYN=$EPICS_MODULES/asyn!" &&
-        mv -fv "$file.$$.tmp" "$file"
+        $MV -fv "$file.$$.tmp" "$file"
     fi
   else
     echo fix_epics_base PWD=$PWD file=$file does not exist, doing nothing
@@ -562,7 +572,7 @@ remove_modules_from_RELEASE()
     if grep $mod $file >/dev/null; then
       sed -e "s/\($mod=.*\$\)/## xx \1/g" <$file >$file.$$.tmp &&
       ! diff $file $file.$$.tmp >/dev/null &&
-      mv -f $file.$$.tmp $file || {
+      $MV -f $file.$$.tmp $file || {
         echo >&2 failed removing $mod in $PWD
         exit 1
       }
@@ -577,7 +587,7 @@ remove_modules_from_Makefile()
     echo removing $mod in $PWD/$file &&
     sed -e "s/ $mod / /g" -e "s/ $mod\$/ /g" <$file >$file.$$.tmp &&
     ! diff $file $file.$$.tmp >/dev/null &&
-    mv -f $file.$$.tmp $file || {
+    $MV -f $file.$$.tmp $file || {
       echo >&2 failed removing $mod in $PWD
       exit 1
     }
@@ -590,12 +600,12 @@ comment_out_in_file()
   file=$1 &&
   shift &&
   if ! test -f "$filebasename.original"; then
-    cp "$file" "$filebasename.original" || {
-      echo >&2 failed cp -v $file $filebasename.original in $PWD
+    $CP "$file" "$filebasename.original" || {
+      echo >&2 failed $CP -v $file $filebasename.original in $PWD
       exit 1
     }
   fi &&
-  cp "$filebasename.original" "$file" &&
+  $CP "$filebasename.original" "$file" &&
   for mod in "$@"; do
     if grep "^#.*$mod" $file >/dev/null; then
       echo already commented out $mod in $PWD/$file
@@ -605,7 +615,7 @@ comment_out_in_file()
       echo file=$file filebasename=$filebasename &&
       sed -e "s/\(.*$mod.*\)/# rem by install-epics \1/g" <$file >$file.suffix &&
       ! diff  $file $file.suffix >/dev/null &&
-      mv -f $file.suffix $file
+      $MV -f $file.suffix $file
     fi
   done
 }
@@ -689,7 +699,7 @@ fi
 export PATH=\$PATH:\$EPICS_BASE_BIN:\$EPICS_EXT_BIN
 EOF
 
-cp $BASH_ALIAS_EPICS $EPICS_ROOT/.epics.$EPICS_HOST_ARCH &&
+$CP $BASH_ALIAS_EPICS $EPICS_ROOT/.epics.$EPICS_HOST_ARCH &&
 ################
 
 (
@@ -728,7 +738,7 @@ cp $BASH_ALIAS_EPICS $EPICS_ROOT/.epics.$EPICS_HOST_ARCH &&
 (
   cd $EPICS_ROOT/ &&
   if ! test -d modules; then
-    mkdir modules
+    $MKDIR modules
   fi
 ) || exit 1
 
@@ -745,7 +755,7 @@ if test -n "$STREAMDEVICEVER"; then
       tar xzvf $STREAMDEVICEVER.tgz
     fi
     if ! test -d $EPICS_ROOT/$STREAMDEVICEVER/streamdevice-2.6/configure; then
-      mkdir -p $EPICS_ROOT/$STREAMDEVICEVER/streamdevice-2.6/configure
+      $MKDIR -p $EPICS_ROOT/$STREAMDEVICEVER/streamdevice-2.6/configure
     fi
     (
       # Create the files (Obs: \EOF != EOF)
@@ -896,14 +906,14 @@ if test -n "$SYNAPPS_VER_X_Y"; then
       (
         #Move the directory out of its way
         if ! test -d streamdevice.original; then
-          mv streamdevice streamdevice.original || {
-            echo >&2 can not mv streamdevice streamdevice.original PWD=$PWD
+          $MV streamdevice streamdevice.original || {
+            echo >&2 can not $MV streamdevice streamdevice.original PWD=$PWD
             exit 1
           }
           #copy the later streamdevice
-          mkdir streamdevice &&
-          cp -R ../../../StreamDevice-2-6/ streamdevice/  || {
-            echo >&2 cp -R ../../../StreamDevice-2-6/ streamdevice/PWD=$PWD
+          $MKDIR streamdevice &&
+          $CP -R ../../../StreamDevice-2-6/ streamdevice/  || {
+            echo >&2 $CP -R ../../../StreamDevice-2-6/ streamdevice/PWD=$PWD
             exit 1
           }
         fi
@@ -919,14 +929,14 @@ if test -n "$SYNAPPS_VER_X_Y"; then
     done &&
     (
       cd configure &&
-      mkdir -p orig || {
-      echo >&2 failed mkdir -p orig in $PWD
+      $MKDIR -p orig || {
+      echo >&2 failed $MKDIR -p orig in $PWD
         exit 1
       }
       for f in EPICS_BASE.cygwin* EPICS_BASE.linux-* EPICS_BASE.win32-* EPICS_BASE.windows-* SUPPORT.cygwin-*  SUPPORT.linux-*  SUPPORT.win32-*  SUPPORT.windows-*; do
         if test -f "$f"; then
-          mv -v "$f" $PWD/orig/ || {
-            echo >&2 failed mv "$f" orig/ in $PWD
+          $MV -v "$f" $PWD/orig/ || {
+            echo >&2 failed $MV "$f" orig/ in $PWD
             exit 1
           }
         fi
@@ -957,9 +967,9 @@ if test -n "$SYNAPPS_VER_X_Y"; then
         cd $EPICS_ROOT/$SYNAPPS_VER_X_Y/support &&
         file=Makefile &&
         if ! test -f $file.original; then
-          cp -v $file $file.original || exit 1
+          $CP -v $file $file.original || exit 1
         fi &&
-        cp $file.original $file &&
+        $CP $file.original $file &&
         remove_modules_from_Makefile $file
       ) &&
       file=Makefile &&
@@ -967,38 +977,38 @@ if test -n "$SYNAPPS_VER_X_Y"; then
         # Remove AREA_DETECTOR and IP from RELEASE
         cd $EPICS_ROOT/$SYNAPPS_VER_X_Y/support/xxx-5*/configure &&
         if ! test -f RELEASE.original; then
-          cp -v RELEASE RELEASE.original || exit 1
+          $CP -v RELEASE RELEASE.original || exit 1
         fi &&
         sed <RELEASE.original >RELEASE.$$.tmp \
           -e "s!^AREA_DETECTOR!#AREA_DETECTOR!" \
           -e "s!^IP=!#IP=!" \
           -e "s!^SNCSEQ!#SNCSEQ!" &&
-        mv -fv RELEASE.$$.tmp RELEASE
+        $MV -fv RELEASE.$$.tmp RELEASE
       ) &&
       (
         # Remove AREA_DETECTOR and IP from dbd
         cd $EPICS_ROOT/$SYNAPPS_VER_X_Y/support/xxx-5*/xxxApp/src &&
         if test -f xxxCommonInclude.dbd; then
           if ! test -f xxxCommonInclude.dbd.original; then
-            cp -v xxxCommonInclude.dbd xxxCommonInclude.dbd.original || exit 1
+            $CP -v xxxCommonInclude.dbd xxxCommonInclude.dbd.original || exit 1
           fi &&
           sed <xxxCommonInclude.dbd.original >xxxCommonInclude.dbd.$$.tmp \
             -e "s!\(include.*ipSupport.dbd\)!#\1!" &&
-          mv -fv xxxCommonInclude.dbd.$$.tmp xxxCommonInclude.dbd
+          $MV -fv xxxCommonInclude.dbd.$$.tmp xxxCommonInclude.dbd
         fi
       ) &&
       (
         # Remove AREA_DETECTOR related modules from $file
         cd $EPICS_ROOT/$SYNAPPS_VER_X_Y/support/xxx-5*/xxxApp/src &&
         if ! test -f $file.original; then
-          cp -v $file $file.original || exit 1
+          $CP -v $file $file.original || exit 1
         fi &&
-        cp $file.original $file &&
+        $CP $file.original $file &&
         for mod in $MODSFROMMAKEFILE; do
           echo removing $mod in $PWD/$file &&
           sed -e "s/\(.*$mod.*\)/#XXX Removed by install-epics.sh XXX  \1/g" <$file >$file.$$.tmp &&
           ! diff $file $file.$$.tmp >/dev/null &&
-          mv -f $PWD/$file.$$.tmp $PWD/$file ||{
+          $MV -f $PWD/$file.$$.tmp $PWD/$file ||{
             echo >&2 failed removing $mod in $PWD
             exit 1
           }
@@ -1046,7 +1056,7 @@ if test "$EPICS_MSI_VER"; then
         wget_or_curl http://www.aps.anl.gov/epics/download/extensions/$EPICS_MSI_VER.tar.gz $EPICS_MSI_VER.tar.gz
       fi &&
       (
-        mkdir -p extensions/src &&
+        $MKDIR -p extensions/src &&
         cd extensions/src &&
         tar xzf ../../$EPICS_MSI_VER.tar.gz &&
         cd $EPICS_MSI_VER &&
