@@ -12,7 +12,7 @@ SYNAPPSVER=5_8
 #Version for ASYN
 ASYNVER=GIT
 
-#MOTORVER=6-9
+MOTORVER=GIT
 #http://www.aps.anl.gov/bcda/synApps/motor/tar/motorR6-8-1.tar.gz
 #http://www.aps.anl.gov/bcda/synApps/motor/tar/motorR6-9.tar.gz
 
@@ -73,11 +73,13 @@ if $(echo "$EPICS_ROOT" | grep -q /usr/local); then
   LN="sudo ln"
   MKDIR="sudo mkdir"
   MV="sudo mv"
+  RM="sudo rm"
 else
   CP=cp
   LN=ln
   MKDIR=mkdir
   MV=mv
+  RM=rm
   SUDO=
 fi
 export CP LN MKDIR MV SUDO
@@ -134,10 +136,10 @@ export APTGET
 #########################
 
 create_soft_x_y() {
-  echo create_soft_x_y "$@"
   dir=$1
   src=$2
   dst=$3
+  echo dir=$dir create_soft_x_y "$@"
   export dir src dst
   (
     cd "$dir" &&
@@ -146,24 +148,10 @@ create_soft_x_y() {
       # unlink, first as user, then as SUDO
       if test "$linkdst" != "$src"; then
         echo "$linkdst" != "$dst" &&
-        echo PWD=$PWD rm $dst &&
-        rm -f $dst &&
+        echo PWD=$PWD $RM $dst &&
+        $RM -f $dst &&
         echo PWD=$PWD $LN -s $src $dst &&
         $LN -s $src $dst || {
-          echo >&2 can not link $src $dst
-          exit 1
-        }
-      fi
-      linkdst=$(readlink $dst) || linkdst=""
-      if test "$linkdst" != "$src"; then
-        echo "$linkdst" != "$dst" &&
-        echo PWD=$PWD $SUDO rm $dst &&
-        $SUDO rm -f $dst || {
-          echo >&2 can not rm -f $dst
-          exit 1
-        }
-        echo PWD=$PWD $SUDO $LN -s $src $dst &&
-        $SUDO $LN -s $src $dst || {
           echo >&2 can not link $src $dst
           exit 1
         }
@@ -279,8 +267,8 @@ install_asyn_ver()
   asyndir="$1"/
   cd $EPICS_ROOT/modules &&
   if test -L asyn; then
-    echo rm asyn &&
-    rm asyn
+    echo $RM asyn &&
+    $RM asyn
   fi &&
   test -d $asyndir || {
     echo >&2 PWD=$PWD Can not $LN -sv $asyndir asyn
@@ -361,12 +349,19 @@ install_motor_X_Y ()
   create_soft_x_y $EPICS_ROOT/modules ../$MOTOR_VER_X_Y/ motor
   (
     cd $EPICS_ROOT &&
-      if ! test -f $MOTOR_VER_X_Y.tar.gz; then
-        wget_or_curl http://www.aps.anl.gov/bcda/synApps/motor/tar/$MOTOR_VER_X_Y.tar.gz $MOTOR_VER_X_Y.tar.gz
+      if test "$MOTORVER" = GIT; then
+        if ! test -d $MOTOR_VER_X_Y; then
+              $SUDO git clone torstenbogershausen@torbogrouter.esss.lu.se:/media/data/gits/torstenbogershausen/motorR6-9.git $MOTOR_VER_X_Y ||
+                ( $RM -rf $MOTOR_VER_X_Y; /usr/bin/false )
+        fi
+      else
+        if ! test -f $MOTOR_VER_X_Y.tar.gz; then
+          wget_or_curl http://www.aps.anl.gov/bcda/synApps/motor/tar/$MOTOR_VER_X_Y.tar.gz $MOTOR_VER_X_Y.tar.gz
+        fi
+        if ! test -d $MOTOR_VER_X_Y; then
+          tar xzvf $MOTOR_VER_X_Y.tar.gz
+        fi
       fi
-    if ! test -d $MOTOR_VER_X_Y; then
-      tar xzvf $MOTOR_VER_X_Y.tar.gz
-    fi
   ) &&
   (
     # Need to fix epics base for synapss already here,
@@ -411,8 +406,8 @@ install_motor_from_synapps()
   echo install_motor_from_synapps
   cd $EPICS_ROOT/modules &&
   if test -e motor; then
-    echo rm -rf motor &&
-    rm -rf motor
+    echo $RM -rf motor &&
+    $RM -rf motor
   fi &&
   $MKDIR -p motor &&
   cd motor &&
@@ -420,14 +415,14 @@ install_motor_from_synapps()
   echo motordevver=$motordevver &&
   for f in src dbd Db lib include; do
     if test -e $f; then
-      echo rm -rf $f &&
-      rm -rf $f
+      echo $RM -rf $f &&
+      $RM -rf $f
     fi
   done &&
   (
     $MKDIR dbd &&
     cd dbd &&
-    rm -rf * &&
+    $RM -rf * &&
     for mdbd in $(find ../../../$SYNAPPS_VER_X_Y/support/motor-* -name '*.dbd'); do
       dbdbasename="${mdbd##*/}" &&
       #echo mdbd=$mdbd dbdbasename=$dbdbasename &&
@@ -439,7 +434,7 @@ install_motor_from_synapps()
   (
     $MKDIR Db &&
     cd Db &&
-    rm -rf * &&
+    $RM -rf * &&
     for mdbd in $(find ../../../$SYNAPPS_VER_X_Y/support/motor-* -name '*.db'); do
       dbdbasename="${mdbd##*/}" &&
       #echo mdbd=$mdbd dbdbasename=$dbdbasename &&
@@ -470,15 +465,15 @@ install_streamdevice()
   streamdevver=$(echo ../../$SYNAPPS_VER_X_Y/support/stream-*) &&
   echo streamdevver=$streamdevver &&
   if test -L src; then
-    echo rm src &&
-    rm src
+    echo $RM src &&
+    $RM src
   fi &&
   echo $LN -s ../../$SYNAPPS_VER_X_Y/support/$streamdevver/streamDevice/src/ src &&
   $LN -s ../../$SYNAPPS_VER_X_Y/support/$streamdevver/streamDevice/src/ src || exit 1
   for f in dbd lib include; do
     if test -L $f; then
-      echo rm $f &&
-      rm $f
+      echo $RM $f &&
+      $RM $f
     fi &&
     $LN -s ../../$SYNAPPS_VER_X_Y/support/$streamdevver/$f/ $f || exit 1
   done
@@ -618,9 +613,9 @@ comment_out_in_file()
       echo commenting out $mod in $PWD/$file &&
       filebasename="${file%*.original}" &&
       echo file=$file filebasename=$filebasename &&
-      sed -e "s/\(.*$mod.*\)/# rem by install-epics \1/g" <$file >$file.suffix &&
+      sed -e "s/\(.*$mod.*\)/# rem by install-epics \1/g" <$file >/tmp/$filebasename.$$ &&
       ! diff  $file $file.suffix >/dev/null &&
-      $MV -f $file.suffix $file
+      $MV -f /tmp/$filebasename.$$ $file
     fi
   done
 }
@@ -645,7 +640,7 @@ comment_out_in_file()
   if ! test -d base-$EPICS_BASE_VER; then
     tar xzf base${SEP}${EPICS_BASE_VER}.tar.gz || {
       echo >&2 can not tar xzf base${SEP}${EPICS_BASE_VER}.tar.gz
-      rm -rf base-$EPICS_BASE_VER
+      $RM -rf base-$EPICS_BASE_VER
       exit 1
     }
   fi
@@ -855,7 +850,7 @@ if test -n "$ASYN_VER_X_Y"; then
       if test "$ASYNVER" = GIT; then
         if ! test -d $ASYN_VER_X_Y; then
            $SUDO git clone https://github.com/epics-modules/asyn.git $ASYN_VER_X_Y ||
-             ( rm -rf $ASYN_VER_X_Y; /usr/bin/false )
+             ( $RM -rf $ASYN_VER_X_Y; /usr/bin/false )
         fi
       else
         if ! test -f $ASYN_VER_X_Y.tar.gz; then
