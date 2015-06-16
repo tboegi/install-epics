@@ -4,7 +4,8 @@ BASHRC=~/.bashrc
 BASH_ALIAS_EPICS=~/.epics
 
 #Version of base
-EPICS_BASE_VER=3.15.2
+#EPICS_BASE_VER=3.15.2
+EPICS_BASE_VER=3.14.12.5
 
 #Version for synApps
 SYNAPPSVER=5_8
@@ -171,12 +172,17 @@ if ! test -d $EPICS_ROOT; then
 fi
 
 if ! test -w $EPICS_ROOT; then
-  echo $SUDO chown "$USER" $EPICS_ROOT &&
-  $SUDO chown "$USER" $EPICS_ROOT || {
+  echo FSUDO=$SUDO
+  echo $FSUDO chown "$USER" $EPICS_ROOT &&
+  $FSUDO chown "$USER" $EPICS_ROOT || {
     echo >&2 can not chown $EPICS_ROOT
     exit 1
   }
+else
+  echo FSUDO=
+  export FSUDO
 fi
+echo FSUDO=$FSUDO
 
 if ! test -d /usr/local; then
   sudo $MKDIR /usr/local
@@ -244,8 +250,8 @@ install_re2c()
     ./autogen.sh &&
     ./configure &&
     make &&
-    echo PWD=$PWD $SUDO make install &&
-    $SUDO make install
+    echo PWD=$PWD $FSUDO make install &&
+    $FSUDO make install
   )
 }
 run_make_in_dir()
@@ -254,7 +260,7 @@ run_make_in_dir()
   echo cd $dir &&
   (
     cd $dir &&
-    $SUDO make || {
+    $FSUDO make || {
     echo >&2 PWD=$PWD Can not make
     exit 1
   }
@@ -351,8 +357,8 @@ install_motor_X_Y ()
     cd $EPICS_ROOT &&
       if test "$MOTORVER" = GIT; then
         if ! test -d $MOTOR_VER_X_Y; then
-              $SUDO git clone torstenbogershausen@torbogrouter.esss.lu.se:/media/data/gits/torstenbogershausen/motorR6-9.git $MOTOR_VER_X_Y ||
-                ( $RM -rf $MOTOR_VER_X_Y; /usr/bin/false )
+              $FSUDO git clone torstenbogershausen@torbogrouter.esss.lu.se:/media/data/gits/torstenbogershausen/motorR6-9.git $MOTOR_VER_X_Y ||
+                ( $RM -rf $MOTOR_VER_X_Y; false )
         fi
       else
         if ! test -f $MOTOR_VER_X_Y.tar.gz; then
@@ -849,8 +855,8 @@ if test -n "$ASYN_VER_X_Y"; then
       cd $EPICS_ROOT &&
       if test "$ASYNVER" = GIT; then
         if ! test -d $ASYN_VER_X_Y; then
-           $SUDO git clone https://github.com/epics-modules/asyn.git $ASYN_VER_X_Y ||
-             ( $RM -rf $ASYN_VER_X_Y; /usr/bin/false )
+           $FSUDO git clone https://github.com/epics-modules/asyn.git $ASYN_VER_X_Y ||
+             ( $RM -rf $ASYN_VER_X_Y; false )
         fi
       else
         if ! test -f $ASYN_VER_X_Y.tar.gz; then
