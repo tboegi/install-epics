@@ -4,7 +4,7 @@ BASHRC=~/.bashrc
 BASH_ALIAS_EPICS=~/.epics
 
 #Version of base
-EPICS_BASE_VER=3.15.1
+EPICS_BASE_VER=3.15.2
 
 #Version for synApps
 SYNAPPSVER=5_8
@@ -623,7 +623,7 @@ comment_out_in_file()
 
 (
   case "$EPICS_BASE_VER" in
-    3.15.1)
+    3.15.1|3.15.2)
     SEP="-"
     ;;
     3.14.12.*)
