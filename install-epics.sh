@@ -70,20 +70,16 @@ case $yesno in
 esac
 
 if $(echo "$EPICS_ROOT" | grep -q /usr/local); then
-  CP="sudo cp"
-  LN="sudo ln"
-  MKDIR="sudo mkdir"
-  MV="sudo mv"
-  RM="sudo rm"
-else
-  CP=cp
-  LN=ln
-  MKDIR=mkdir
-  MV=mv
-  RM=rm
-  SUDO=
+  FSUDO=sudo
 fi
-export CP LN MKDIR MV SUDO
+
+CP="$FSUDO cp"
+LN="$FSUDO ln"
+MKDIR="$FSUDO mkdir"
+MV="$FSUDO mv"
+RM="$FSUDO rm"
+
+export CP FSUDO LN MKDIR MV RM SUDO
 
 case "$SYNAPPS_VER_X_Y" in
   synApps_5_6)
@@ -172,7 +168,7 @@ if ! test -d $EPICS_ROOT; then
 fi
 
 if ! test -w $EPICS_ROOT; then
-  echo FSUDO=$SUDO
+  echo FSUDO=$FSUDO
   echo $FSUDO chown "$USER" $EPICS_ROOT &&
   $FSUDO chown "$USER" $EPICS_ROOT || {
     echo >&2 can not chown $EPICS_ROOT
