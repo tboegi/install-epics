@@ -13,7 +13,7 @@ SYNAPPSVER=5_8
 #Version for ASYN
 ASYNVER=GIT
 
-MOTORVER=GIT
+#MOTORVER=GIT
 #http://www.aps.anl.gov/bcda/synApps/motor/tar/motorR6-8-1.tar.gz
 #http://www.aps.anl.gov/bcda/synApps/motor/tar/motorR6-9.tar.gz
 
@@ -32,7 +32,7 @@ if test "$EPICS_DEBUG" = ""; then
 fi
 #Where are the binaries of EPICS
 if ! test "$EPICS_DOWNLOAD"; then
-  EPICS_DOWNLOAD=/usr/local/esss
+  EPICS_DOWNLOAD=/usr/local/epics
 fi
 
 EPICS_ROOT=$EPICS_DOWNLOAD/EPICS_BASE_${EPICS_BASE_VER}
@@ -615,9 +615,9 @@ comment_out_in_file()
       echo commenting out $mod in $PWD/$file &&
       filebasename="${file%*.original}" &&
       echo file=$file filebasename=$filebasename &&
-      sed -e "s/\(.*$mod.*\)/# rem by install-epics \1/g" <$file >/tmp/$filebasename.$$ &&
+      sed -e "s/\(.*$mod.*\)/# rem by install-epics \1/g" <$file >/tmp/xx.$$ &&
       ! diff  $file $file.suffix >/dev/null &&
-      $MV -f /tmp/$filebasename.$$ $file
+      $MV -f /tmp/xx.$$ $file
     fi
   done
 }
