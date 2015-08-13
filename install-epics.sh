@@ -497,7 +497,7 @@ patch_CONFIG_gnuCommon()
     fi &&
     $CP $file.original $file &&
     case $PWD in
-      *3.14.12.3*|*3.15.1*)
+      *3.14.12.3*|*3.14.12.5*|*3.15.1*)
       cat <<\EOF > "$file.patch"
 diff --git a/CONFIG.gnuCommon b/CONFIG.gnuCommon
 index f054802..d59a420 100644
