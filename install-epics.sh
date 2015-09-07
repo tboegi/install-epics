@@ -13,7 +13,7 @@ SYNAPPSVER=5_8
 #Version for ASYN
 ASYNVER=GIT
 
-#MOTORVER=GIT
+MOTORVER=GIT
 #http://www.aps.anl.gov/bcda/synApps/motor/tar/motorR6-8-1.tar.gz
 #http://www.aps.anl.gov/bcda/synApps/motor/tar/motorR6-9.tar.gz
 
