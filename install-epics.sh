@@ -11,8 +11,8 @@ EPICS_BASE_VER=3.14.12.5
 SYNAPPSVER=5_8
 
 #Version for ASYN
-#ASYNVER=4-21
-ASYNVER=GIT
+ASYNVER=4-26
+#ASYNVER=GIT
 
 #MOTORVER=R6-8-1
 MOTORVER=GIT
@@ -355,7 +355,7 @@ install_motor_X_Y ()
     cd $EPICS_ROOT &&
       if test "$MOTORVER" = GIT; then
         if ! test -d $MOTOR_VER_X_Y; then
-              $FSUDO git clone torstenbogershausen@torbogrouter.esss.lu.se:/media/data/gits/torstenbogershausen/motorR6-9.git $MOTOR_VER_X_Y ||
+              $FSUDO git clone https://github.com/tboegi/motor.git $MOTOR_VER_X_Y ||
                 ( $RM -rf $MOTOR_VER_X_Y; false )
         fi
       else
