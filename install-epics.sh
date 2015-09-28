@@ -11,8 +11,10 @@ EPICS_BASE_VER=3.14.12.5
 SYNAPPSVER=5_8
 
 #Version for ASYN
+#ASYNVER=4-21
 ASYNVER=GIT
 
+#MOTORVER=R6-8-1
 MOTORVER=GIT
 #http://www.aps.anl.gov/bcda/synApps/motor/tar/motorR6-8-1.tar.gz
 #http://www.aps.anl.gov/bcda/synApps/motor/tar/motorR6-9.tar.gz
@@ -650,10 +652,12 @@ comment_out_in_file()
 
 #Need to set the softlink now
 
+if test -n "$EPICS_HOST_ARCH"; then
 EPICS_HOST_ARCH=$($EPICS_ROOT/base-${EPICS_BASE_VER}/startup/EpicsHostArch) || {
   echo >&2 EPICS_HOST_ARCH failed
   exit 1
 }
+fi
 # here we know the EPICS_HOST_ARCH
 export EPICS_HOST_ARCH
 EPICS_BASE_BIN=${EPICS_BASE}/bin/$EPICS_HOST_ARCH
