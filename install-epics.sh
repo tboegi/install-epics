@@ -4,8 +4,8 @@ BASHRC=~/.bashrc
 BASH_ALIAS_EPICS=~/.epics
 
 #Version of base
-#EPICS_BASE_VER=3.15.2
-EPICS_BASE_VER=3.14.12.5
+EPICS_BASE_VER=3.15.2
+#EPICS_BASE_VER=3.14.12.5
 
 #Version for synApps
 SYNAPPSVER=5_8
@@ -355,7 +355,7 @@ install_motor_X_Y ()
     cd $EPICS_ROOT &&
       if test "$MOTORVER" = GIT; then
         if ! test -d $MOTOR_VER_X_Y; then
-              $FSUDO git clone torstenbogershausen@torbogrouter.esss.lu.se:/media/data/gits/torstenbogershausen/motorR6-9.git $MOTOR_VER_X_Y ||
+              $FSUDO git clone https://github.com/tboegi/epics-motor.git $MOTOR_VER_X_Y  ||
                 ( $RM -rf $MOTOR_VER_X_Y; false )
         fi
       else
@@ -499,7 +499,7 @@ patch_CONFIG_gnuCommon()
     fi &&
     $CP $file.original $file &&
     case $PWD in
-      *3.14.12.3*|*3.14.12.5*|*3.15.1*)
+      *3.14.12.3*|*3.14.12.5*|*3.15.1*|*3.15.2*)
       cat <<\EOF > "$file.patch"
 diff --git a/CONFIG.gnuCommon b/CONFIG.gnuCommon
 index f054802..d59a420 100644
