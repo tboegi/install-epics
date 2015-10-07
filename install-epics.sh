@@ -4,15 +4,17 @@ BASHRC=~/.bashrc
 BASH_ALIAS_EPICS=~/.epics
 
 #Version of base
-#EPICS_BASE_VER=3.15.2
-EPICS_BASE_VER=3.14.12.5
+EPICS_BASE_VER=3.15.2
+BASE_VER=GIT
+EPICS_BASE_GIT_VER=3.15
+#EPICS_BASE_VER=3.14.12.5
 
 #Version for synApps
 SYNAPPSVER=5_8
 
 #Version for ASYN
-ASYNVER=4-26
-#ASYNVER=GIT
+#ASYNVER=4-21
+ASYNVER=GIT
 
 #MOTORVER=R6-8-1
 MOTORVER=GIT
@@ -38,6 +40,9 @@ if ! test "$EPICS_DOWNLOAD"; then
 fi
 
 EPICS_ROOT=$EPICS_DOWNLOAD/EPICS_BASE_${EPICS_BASE_VER}
+if test -n "$BASE_VER"; then
+  EPICS_ROOT=${EPICS_ROOT}_GIT
+fi
 if test -n "$ASYNVER"; then
   ASYN_VER_X_Y=asyn$ASYNVER
   EPICS_ROOT=${EPICS_ROOT}_ASYN_${ASYNVER}
@@ -642,15 +647,26 @@ comment_out_in_file()
   esac
 
   cd $EPICS_ROOT &&
-  if ! test -f base${SEP}${EPICS_BASE_VER}.tar.gz; then
-    wget_or_curl http://www.aps.anl.gov/epics/download/base/base${SEP}${EPICS_BASE_VER}.tar.gz base${SEP}${EPICS_BASE_VER}.tar.gz
-  fi
+
   if ! test -d base-$EPICS_BASE_VER; then
-    tar xzf base${SEP}${EPICS_BASE_VER}.tar.gz || {
-      echo >&2 can not tar xzf base${SEP}${EPICS_BASE_VER}.tar.gz
-      $RM -rf base-$EPICS_BASE_VER
-      exit 1
-    }
+    #if test "$EPICS_BASE_VER" = GIT; then
+    if /bin/true; then
+      git clone https://github.com/epics-base/epics-base.git base-$EPICS_BASE_VER &&
+      (
+        cd base-$EPICS_BASE_VER && git checkout $EPICS_BASE_GIT_VER
+      )
+    else
+      if ! test -f base${SEP}${EPICS_BASE_VER}.tar.gz; then
+        wget_or_curl http://www.aps.anl.gov/epics/download/base/base${SEP}${EPICS_BASE_VER}.tar.gz base${SEP}${EPICS_BASE_VER}.tar.gz
+      fi
+      if ! test -d base-$EPICS_BASE_VER; then
+        tar xzf base${SEP}${EPICS_BASE_VER}.tar.gz || {
+          echo >&2 can not tar xzf base${SEP}${EPICS_BASE_VER}.tar.gz
+          $RM -rf base-$EPICS_BASE_VER
+          exit 1
+        }
+      fi
+    fi
   fi
 ) || exit 1
 
