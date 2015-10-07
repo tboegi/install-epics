@@ -4,8 +4,8 @@ BASHRC=~/.bashrc
 BASH_ALIAS_EPICS=~/.epics
 
 #Version of base
-EPICS_BASE_VER=3.15.2
-#EPICS_BASE_VER=3.14.12.5
+#EPICS_BASE_VER=3.15.2
+EPICS_BASE_VER=3.14.12.5
 
 #Version for synApps
 SYNAPPSVER=5_8
@@ -355,8 +355,12 @@ install_motor_X_Y ()
     cd $EPICS_ROOT &&
       if test "$MOTORVER" = GIT; then
         if ! test -d $MOTOR_VER_X_Y; then
-              $FSUDO git clone https://github.com/tboegi/epics-motor.git $MOTOR_VER_X_Y  ||
-                ( $RM -rf $MOTOR_VER_X_Y; false )
+					(
+            $FSUDO git clone https://github.com/tboegi/motor.git $MOTOR_VER_X_Y  &&
+						cd $MOTOR_VER_X_Y &&
+						$FSUDO git checkout R6-8-1
+					)||
+            ( $RM -rf $MOTOR_VER_X_Y; false )
         fi
       else
         if ! test -f $MOTOR_VER_X_Y.tar.gz; then
@@ -865,7 +869,7 @@ if test -n "$ASYN_VER_X_Y"; then
         if ! test -d $ASYN_VER_X_Y; then
           tar xzvf $ASYN_VER_X_Y.tar.gz
         fi
-      fi  
+      fi
     ) &&
     (
       # Need to fix epics base for synapss already here,
@@ -1097,7 +1101,7 @@ if test -n "$SYNAPPS_VER_X_Y"; then
     exit 1
   }
 fi
-  
+
 if test -z "$MOTORVER"; then
   patch_motor_h $EPICS_ROOT/$SYNAPPS_VER_X_Y/support/motor-*/motorApp/MotorSrc &&
   comment_out_in_file $EPICS_ROOT/$SYNAPPS_VER_X_Y/support/motor-*/motorApp/Makefile HytecSrc AerotechSrc &&
