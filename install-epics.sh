@@ -4,9 +4,9 @@ BASHRC=~/.bashrc
 BASH_ALIAS_EPICS=~/.epics
 
 #Version of base
-EPICS_BASE_VER=3.15.2
+EPICS_BASE_VER=3.14.12.5
 BASE_VER=GIT
-EPICS_BASE_GIT_VER=3.15
+EPICS_BASE_GIT_VER=3.14.12.5
 #EPICS_BASE_VER=3.14.12.5
 
 #Version for synApps
@@ -15,6 +15,7 @@ SYNAPPSVER=5_8
 #Version for ASYN
 #ASYNVER=4-21
 ASYNVER=GIT
+ASYN_GIT_VER=master
 
 #MOTORVER=R6-8-1
 MOTORVER=GIT
@@ -875,7 +876,11 @@ if test -n "$ASYN_VER_X_Y"; then
       cd $EPICS_ROOT &&
       if test "$ASYNVER" = GIT; then
         if ! test -d $ASYN_VER_X_Y; then
-           $FSUDO git clone https://github.com/epics-modules/asyn.git $ASYN_VER_X_Y ||
+					(
+						$FSUDO git clone https://github.com/epics-modules/asyn.git $ASYN_VER_X_Y
+						cd $ASYN_VER_X_Y &&
+						$FSUDO git checkout $ASYN_GIT_VER
+					) ||
              ( $RM -rf $ASYN_VER_X_Y; false )
         fi
       else
