@@ -6,7 +6,7 @@ BASH_ALIAS_EPICS=~/.epics
 #Version of base
 EPICS_BASE_VER=3.14.12.5
 BASE_VER=GIT
-EPICS_BASE_GIT_VER=3.14.12.5
+EPICS_BASE_GIT_VER=R3.14.12.5
 #EPICS_BASE_VER=3.14.12.5
 
 #Version for synApps
@@ -19,6 +19,8 @@ ASYN_GIT_VER=master
 
 #MOTORVER=R6-8-1
 MOTORVER=GIT
+#MOTOR_GIT_VER=R6-8-1
+MOTOR_GIT_VER=master
 #http://www.aps.anl.gov/bcda/synApps/motor/tar/motorR6-8-1.tar.gz
 #http://www.aps.anl.gov/bcda/synApps/motor/tar/motorR6-9.tar.gz
 
@@ -78,7 +80,11 @@ case $yesno in
 esac
 
 if $(echo "$EPICS_ROOT" | grep -q /usr/local); then
-  FSUDO=sudo
+	echo EPICS_ROOT=$EPICS_ROOT
+	echo EPICS_DOWNLOAD=$EPICS_DOWNLOAD
+	if ! test -w "$EPICS_DOWNLOAD"; then
+		FSUDO=sudo
+	fi
 fi
 
 CP="$FSUDO cp"
@@ -364,7 +370,7 @@ install_motor_X_Y ()
 					(
             $FSUDO git clone https://github.com/tboegi/motor.git $MOTOR_VER_X_Y  &&
 						cd $MOTOR_VER_X_Y &&
-						$FSUDO git checkout R6-8-1
+						$FSUDO git checkout $MOTOR_GIT_VER
 					)||
             ( $RM -rf $MOTOR_VER_X_Y; false )
         fi
