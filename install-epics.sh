@@ -54,8 +54,8 @@ if test -n "$SYNAPPSVER"; then
   EPICS_ROOT=${EPICS_ROOT}_SYNAPPS_${SYNAPPSVER}
 fi
 if test -n "$MOTORVER"; then
-  MOTOR_VER_X_Y=motorR$MOTORVER
-  EPICS_ROOT=${EPICS_ROOT}_MOTOR_${MOTORVER}
+  MOTOR_VER_X_Y=motorR$MOTORVER$MOTOR_GIT_VER
+  EPICS_ROOT=${EPICS_ROOT}_MOTOR_${MOTORVER}_${MOTOR_GIT_VER}
 fi
 
 if test "$EPICS_DEBUG" = y; then
@@ -365,7 +365,7 @@ install_motor_X_Y ()
   create_soft_x_y $EPICS_ROOT/modules ../$MOTOR_VER_X_Y/ motor
   (
     cd $EPICS_ROOT &&
-      if test "$MOTORVER" = GIT; then
+      if test "$MOTORVER" = GIT && test -n "$MOTOR_GIT_VER"; then
         if ! test -d $MOTOR_VER_X_Y; then
 					(
             $FSUDO git clone https://github.com/tboegi/motor.git $MOTOR_VER_X_Y  &&
