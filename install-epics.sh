@@ -4,23 +4,26 @@ BASHRC=~/.bashrc
 BASH_ALIAS_EPICS=~/.epics
 
 #Version of base
-EPICS_BASE_VER=3.14.12.5
+EPICS_BASE_VER=3.15.2
 BASE_VER=GIT
 EPICS_BASE_GIT_VER=R3.14.12.5
-#EPICS_BASE_VER=3.14.12.5
+EPICS_BASE_GIT_VER=R3.15.2
+
 
 #Version for synApps
-SYNAPPSVER=5_8
+#SYNAPPSVER=5_8
 
 #Version for ASYN
 #ASYNVER=4-21
 ASYNVER=GIT
-ASYN_GIT_VER=master
+ASYN_GIT_VER=R4-27
 
 #MOTORVER=R6-8-1
 MOTORVER=GIT
-#MOTOR_GIT_VER=R6-8-1
-MOTOR_GIT_VER=master
+#MOTOR_GIT_VER=ac4f56b
+MOTOR_GIT_VER=R6-8-1
+#MOTOR_GIT_VER=master
+#MOTOR_GIT_VER=d5be8003ba
 #http://www.aps.anl.gov/bcda/synApps/motor/tar/motorR6-8-1.tar.gz
 #http://www.aps.anl.gov/bcda/synApps/motor/tar/motorR6-9.tar.gz
 
